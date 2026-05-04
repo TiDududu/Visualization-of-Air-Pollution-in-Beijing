@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>北京空气质量地图</title>
+    <link rel="stylesheet" href="src/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Visualization of Air Pollution in Beijing</p>
+          <h1>北京空气质量地图</h1>
+        </div>
+        <div class="metric-toggle" aria-label="选择空气质量指标">
+          <button class="metric-button active" type="button" data-metric="AQI">AQI</button>
+          <button class="metric-button" type="button" data-metric="PM2.5">PM2.5</button>
+          <button class="metric-button" type="button" data-metric="PM10">PM10</button>
+        </div>
+      </header>
+
+      <section class="map-panel" aria-label="北京空气质量静态地图">
+        <div id="map" class="map"></div>
+        <aside class="details" aria-live="polite">
+          <h2 id="detail-title">PM2.5 区域日均值</h2>
+          <p id="detail-summary">每个区域的空气质量由该区域内各监测站点的日均值求平均得到。</p>
+          <div class="date-control">
+            <div class="date-control-header">
+              <button id="play-button" class="play-button" type="button">播放</button>
+              <strong id="current-date">2014-01-01</strong>
+            </div>
+            <input id="date-slider" type="range" min="0" max="30" value="0" step="1" aria-label="选择 2014 年 1 月日期">
+          </div>
+          <div id="legend" class="legend"></div>
+          <div class="stats-grid">
+            <div>
+              <span class="stat-label">最高区域</span>
+              <strong id="max-region">-</strong>
+            </div>
+            <div>
+              <span class="stat-label">最低区域</span>
+              <strong id="min-region">-</strong>
+            </div>
+            <div>
+              <span class="stat-label">总站点数量</span>
+              <strong>35</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <div id="tooltip" class="tooltip" role="status"></div>
+    <script src="src/d3.v7.min.js"></script>
+    <script src="src/app.js"></script>
+  </body>
+</html>
