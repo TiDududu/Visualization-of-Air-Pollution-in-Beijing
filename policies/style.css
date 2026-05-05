@@ -1,0 +1,323 @@
+:root {
+  --bg: #f4f7f4;
+  --surface: #ffffff;
+  --surface-2: #eef4ef;
+  --ink: #16211b;
+  --muted: #617067;
+  --line: #c9d6cf;
+  --green: #2f7d5c;
+  --teal: #227c8a;
+  --gold: #bf8438;
+  --red: #b85b5b;
+  --shadow: 0 16px 42px rgba(29, 48, 38, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+  background: var(--bg);
+}
+
+.app-shell {
+  width: min(1500px, calc(100vw - 32px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 22px 0 28px;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 2px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.status {
+  flex: 0 0 auto;
+  max-width: 420px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: right;
+}
+
+.timeline-section,
+.pollutant-section,
+.policy-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.timeline-section {
+  margin-top: 18px;
+  padding: 18px 18px 12px;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.section-title span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.timeline-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+}
+
+#timelineSvg {
+  display: block;
+  width: 1320px;
+  height: 330px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.05fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.pollutant-section {
+  min-height: 430px;
+  padding: 18px;
+}
+
+#cloudSvg {
+  display: block;
+  width: 100%;
+  height: 360px;
+}
+
+.policy-panel {
+  min-height: 430px;
+  padding: 22px;
+}
+
+.panel-placeholder {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.policy-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.policy-detail h3 {
+  margin: 0;
+  color: var(--green);
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.meta-list {
+  display: grid;
+  gap: 11px;
+  margin: 0;
+}
+
+.meta-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #e5ece8;
+}
+
+.meta-row dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.meta-row dd {
+  margin: 0;
+  line-height: 1.65;
+}
+
+.policy-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 38px;
+  padding: 0 14px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  background: var(--green);
+  border-radius: 6px;
+}
+
+.timeline-axis text,
+.year-label,
+.policy-name,
+.cloud-label,
+.cloud-count {
+  font-family: inherit;
+}
+
+.year-label {
+  fill: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.axis-line,
+.year-tick {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.policy-node {
+  cursor: pointer;
+  opacity: 0;
+}
+
+.policy-node rect.cover-frame {
+  fill: #f8faf8;
+  stroke: #c5d5cb;
+  stroke-width: 1;
+  rx: 7;
+}
+
+.policy-node rect.cover-fallback {
+  fill: var(--surface-2);
+  stroke: #c5d5cb;
+  stroke-width: 1;
+  rx: 7;
+}
+
+.policy-node image {
+  clip-path: inset(0 round 6px);
+}
+
+.policy-name {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.policy-node:hover .cover-frame,
+.policy-node.is-selected .cover-frame {
+  stroke: var(--green);
+  stroke-width: 2;
+}
+
+.policy-node.is-selected .policy-name {
+  fill: var(--green);
+}
+
+.cloud-node {
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.cloud-node circle {
+  stroke: rgba(255, 255, 255, 0.86);
+  stroke-width: 2;
+}
+
+.cloud-node.is-dim {
+  opacity: 0.2 !important;
+}
+
+.cloud-label {
+  fill: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.cloud-count {
+  fill: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.error {
+  color: var(--red);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    width: min(100vw - 20px, 760px);
+    padding-top: 14px;
+  }
+
+  .app-header,
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status {
+    text-align: left;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #timelineSvg {
+    width: 1180px;
+  }
+
+  .meta-row {
+    grid-template-columns: 82px 1fr;
+  }
+}
