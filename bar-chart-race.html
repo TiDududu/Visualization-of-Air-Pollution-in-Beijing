@@ -8,27 +8,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
   <style>
     :root {
-      --bg: #f3ede2;
-      --bg-2: #ebe3d3;
-      --ink: #1c1f2b;
-      --ink-soft: #4a4f5e;
-      --rule: #c8bfaf;
-      --rule-soft: #d8d0c0;
-      --accent: #1c1f2b;
+      --bg: #fafaf8;
+      --bg-2: #ffffff;
+      --ink: #18181b;
+      --ink-soft: #6b6b73;
+      --rule: #e5e5e8;
+      --rule-soft: #f0f0f3;
+      --accent: #18181b;
 
       --pm25: #c44536;
-      /* deep vermillion */
       --pm10: #e09f3e;
-      /* warm ochre */
       --no2: #5c8a4e;
-      /* moss green */
       --so2: #2e5c8a;
-      /* deep blue */
     }
 
     * {
@@ -41,30 +37,15 @@
       padding: 0;
       background: var(--bg);
       color: var(--ink);
-      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-family: "Noto Sans SC", "IBM Plex Sans", system-ui, -apple-system, "PingFang SC",
+        "Microsoft YaHei", sans-serif;
       font-weight: 400;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
 
-    /* subtle paper-grain texture */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        radial-gradient(rgba(28, 31, 43, 0.025) 1px, transparent 1px),
-        radial-gradient(rgba(28, 31, 43, 0.018) 1px, transparent 1px);
-      background-size: 3px 3px, 7px 7px;
-      background-position: 0 0, 1px 2px;
-      mix-blend-mode: multiply;
-      z-index: 1;
-    }
-
     .page {
       position: relative;
-      z-index: 2;
       max-width: 1180px;
       margin: 0 auto;
       padding: 36px 36px 60px;
@@ -74,44 +55,41 @@
     .masthead {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      border-bottom: 1px solid var(--ink);
-      padding-bottom: 10px;
-      margin-bottom: 18px;
+      align-items: center;
+      padding-bottom: 14px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      font-size: 12.5px;
+      color: var(--ink-soft);
     }
 
-    .masthead .left {
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 10.5px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
+    .masthead .left,
+    .masthead .right {
+      letter-spacing: 0.02em;
     }
 
     .masthead .right {
       font-family: "IBM Plex Mono", monospace;
-      font-size: 10.5px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
+      font-size: 11px;
+      letter-spacing: 0.05em;
     }
 
     .title-block {
       text-align: center;
-      margin: 22px 0 8px;
+      margin: 28px 0 10px;
     }
 
     h1 {
-      font-family: "Instrument Serif", "Source Han Serif SC", serif;
-      font-weight: 400;
-      font-size: clamp(40px, 5.2vw, 64px);
-      line-height: 1.02;
-      letter-spacing: -0.01em;
-      margin: 0 0 6px;
+      font-family: "Noto Sans SC", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: clamp(34px, 4.8vw, 54px);
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+      margin: 0 0 8px;
     }
 
     h1 em {
-      font-style: italic;
+      font-style: normal;
       color: var(--pm25);
     }
 
@@ -119,8 +97,9 @@
       font-size: 14.5px;
       color: var(--ink-soft);
       max-width: 760px;
-      margin: 8px auto 0;
-      line-height: 1.55;
+      margin: 10px auto 0;
+      line-height: 1.7;
+      font-weight: 400;
     }
 
     .deck {
@@ -128,12 +107,10 @@
       gap: 28px;
       justify-content: center;
       align-items: center;
-      margin: 18px auto 8px;
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
+      margin: 22px auto 8px;
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 500;
     }
 
     .deck .dot {
@@ -141,8 +118,8 @@
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: -1px;
+      margin-right: 7px;
+      vertical-align: 0px;
     }
 
     .deck span {
@@ -152,26 +129,14 @@
     /* ---------- chart frame ---------- */
     .chart-frame {
       position: relative;
-      margin: 18px 0 0;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 30%),
-        var(--bg-2);
+      margin: 20px 0 0;
+      background: var(--bg-2);
       border: 1px solid var(--rule);
-      border-radius: 2px;
+      border-radius: 10px;
       box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.5) inset,
-        0 8px 28px -16px rgba(28, 31, 43, 0.25);
-    }
-
-    .chart-frame::before {
-      content: "FIG. 1";
-      position: absolute;
-      top: 12px;
-      left: 14px;
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: var(--ink-soft);
+        0 1px 2px rgba(24, 24, 27, 0.04),
+        0 8px 24px -12px rgba(24, 24, 27, 0.08);
+      padding: 6px;
     }
 
     svg.chart {
@@ -189,17 +154,17 @@
     }
 
     .axis text {
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 11px;
+      font-family: "IBM Plex Mono", "Noto Sans SC", monospace;
+      font-size: 11.5px;
       fill: var(--ink-soft);
     }
 
     .axis-title {
-      font-family: "IBM Plex Sans", sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.02em;
       fill: var(--ink-soft);
+      font-weight: 500;
     }
 
     .grid line {
@@ -222,7 +187,7 @@
     }
 
     .bar-label-name {
-      font-family: "IBM Plex Sans", sans-serif;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
       font-weight: 600;
       font-size: 14px;
       fill: white;
@@ -239,21 +204,21 @@
     }
 
     .year-display {
-      font-family: "Instrument Serif", serif;
-      font-weight: 400;
-      font-size: 132px;
+      font-family: "Noto Sans SC", "IBM Plex Sans", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 80px;
       line-height: 1;
-      letter-spacing: -0.02em;
-      fill: var(--ink);
-      opacity: 0.92;
+      letter-spacing: -0.035em;
+      fill: var(--ink-soft);
+      opacity: 0.7;
     }
 
     .year-label {
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 10.5px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 11.5px;
+      letter-spacing: 0.05em;
       fill: var(--ink-soft);
+      font-weight: 500;
     }
 
     /* ---------- controls ---------- */
@@ -262,10 +227,10 @@
       align-items: center;
       gap: 18px;
       margin-top: 18px;
-      padding: 14px 16px;
-      background: rgba(255, 255, 255, 0.4);
+      padding: 14px 18px;
+      background: var(--bg-2);
       border: 1px solid var(--rule);
-      border-radius: 2px;
+      border-radius: 10px;
     }
 
     button.play-btn {
@@ -273,21 +238,25 @@
       -webkit-appearance: none;
       border: 1px solid var(--ink);
       background: var(--ink);
-      color: var(--bg);
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      padding: 10px 18px;
+      color: #fff;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 10px 20px;
       cursor: pointer;
-      border-radius: 1px;
+      border-radius: 6px;
       min-width: 110px;
-      transition: background 150ms ease, color 150ms ease;
+      transition: background 150ms ease, border-color 150ms ease, transform 80ms ease;
     }
 
     button.play-btn:hover {
       background: var(--pm25);
       border-color: var(--pm25);
+    }
+
+    button.play-btn:active {
+      transform: translateY(1px);
     }
 
     button.play-btn:focus-visible {
@@ -348,10 +317,10 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: var(--bg);
+      background: var(--bg-2);
       border: 2px solid var(--ink);
       cursor: grab;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
       transition: transform 120ms ease;
     }
 
@@ -367,7 +336,7 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: var(--bg);
+      background: var(--bg-2);
       border: 2px solid var(--ink);
       cursor: grab;
     }
@@ -377,12 +346,12 @@
       font-size: 13px;
       font-weight: 500;
       color: var(--ink);
-      min-width: 56px;
+      min-width: 60px;
       text-align: center;
-      padding: 4px 8px;
+      padding: 5px 10px;
       background: var(--bg);
       border: 1px solid var(--rule);
-      border-radius: 1px;
+      border-radius: 6px;
     }
 
     /* tick markers below scrubber */
@@ -401,7 +370,7 @@
       font-family: "IBM Plex Mono", monospace;
       font-size: 9px;
       color: var(--ink-soft);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.02em;
     }
 
     .scrubber-ticks span::before {
@@ -420,17 +389,17 @@
       position: fixed;
       pointer-events: none;
       background: var(--ink);
-      color: var(--bg);
-      padding: 10px 13px;
-      border-radius: 2px;
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 8px;
       font-size: 12.5px;
       line-height: 1.5;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
       transform: translate(-50%, calc(-100% - 10px));
       opacity: 0;
       transition: opacity 100ms ease;
       z-index: 50;
-      min-width: 140px;
+      min-width: 150px;
       max-width: 220px;
     }
 
@@ -450,11 +419,12 @@
     }
 
     .tooltip .name {
-      font-family: "Instrument Serif", serif;
-      font-style: italic;
-      font-size: 18px;
-      margin-bottom: 2px;
-      line-height: 1;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 15.5px;
+      margin-bottom: 6px;
+      line-height: 1.1;
     }
 
     .tooltip .name .swatch {
@@ -470,40 +440,40 @@
       display: flex;
       justify-content: space-between;
       gap: 14px;
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 11.5px;
+      font-size: 12px;
+      margin-top: 2px;
     }
 
     .tooltip .row .k {
-      color: rgba(243, 237, 226, 0.65);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
     }
 
     .tooltip .row .v {
+      font-family: "IBM Plex Mono", monospace;
       font-weight: 500;
     }
 
     /* ---------- footer ---------- */
     .footer-notes {
       margin-top: 22px;
-      padding-top: 14px;
+      padding-top: 16px;
       border-top: 1px solid var(--rule);
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      font-size: 12px;
-      line-height: 1.6;
+      gap: 28px;
+      font-size: 12.5px;
+      line-height: 1.7;
       color: var(--ink-soft);
     }
 
     .footer-notes h3 {
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12.5px;
+      letter-spacing: 0.02em;
       margin: 0 0 6px;
       color: var(--ink);
+      font-weight: 600;
     }
 
     .footer-notes p {
@@ -512,10 +482,10 @@
 
     .footer-notes code {
       font-family: "IBM Plex Mono", monospace;
-      font-size: 11px;
-      background: rgba(28, 31, 43, 0.06);
-      padding: 1px 5px;
-      border-radius: 2px;
+      font-size: 11.5px;
+      background: rgba(24, 24, 27, 0.06);
+      padding: 1px 6px;
+      border-radius: 4px;
     }
 
     @media (max-width: 720px) {
@@ -538,12 +508,12 @@
   <div class="page">
 
     <header class="masthead">
-      <div class="left">Tsinghua University · Visualization · 2025</div>
-      <div class="right">DATA: AQICN · BEIJING ENV. MONITORING CENTER</div>
+      <div class="left">清华大学 · 数据可视化课程</div>
+      <div class="right">DATA · AQICN / 北京市环境保护监测中心</div>
     </header>
 
     <div class="title-block">
-      <h1>The slow disappearance of <em>Beijing's smog</em></h1>
+      <h1>北京雾霾</h1>
       <p class="subtitle">
         年度均值竞速：四种主要污染物（PM<sub>2.5</sub>、PM<sub>10</sub>、SO₂、NO₂）<br>
         在 2013–2026 这十四年中的排名与浓度变化。
@@ -563,11 +533,11 @@
     </div>
 
     <div class="controls">
-      <button class="play-btn is-playing" id="playBtn" aria-label="Play / pause">
-        <span class="icon"></span><span class="text">PAUSE</span>
+      <button class="play-btn is-playing" id="playBtn" aria-label="播放 / 暂停">
+        <span class="icon"></span><span class="text">暂停</span>
       </button>
       <div class="scrubber">
-        <input type="range" id="scrubber" min="2013" max="2026" step="0.01" value="2013" aria-label="Year scrubber" />
+        <input type="range" id="scrubber" min="2013" max="2026" step="0.01" value="2013" aria-label="年份拖动条" />
         <div class="scrubber-ticks" id="scrubberTicks"></div>
       </div>
       <div class="year-readout" id="yearReadout">2013</div>
@@ -575,15 +545,17 @@
 
     <section class="footer-notes">
       <div>
-        <h3>Method</h3>
+        <h3>方法</h3>
         <p>
-          前端动态解析 CSV，将 US-AQI 转换为实际浓度并计算年均值。动画由 <code>requestAnimationFrame</code> 驱动，对相邻年份数据进行线性插值，实现排名的平滑交错与长度的自适应过渡。
+          前端动态解析 CSV，将 US-AQI 转换为实际浓度并计算年均值。动画由 <code>requestAnimationFrame</code> 驱动，
+          对相邻年份数据进行线性插值，实现排名的平滑交错与条长的自适应过渡。
         </p>
       </div>
       <div>
-        <h3>Notes</h3>
+        <h3>说明</h3>
         <p>
-          数据源于 aqicn.org。程序自动完成 AQI 至 µg/m³ 浓度的转换。因 2013 年原始数据不全，该年起点采用了真实的年均浓度历史记录作为计算基准。
+          自动完成 AQI 至 µg/m³ 浓度的转换。因 2013 年原始数据不全，
+          该年起点采用了真实的年均浓度历史记录作为计算基准。
         </p>
       </div>
     </section>
@@ -595,7 +567,7 @@
   <script src="data-processor.js"></script>
   <script>
     /* ===========================================================
-       DATA  —  Beijing annual averages 2013–2025
+       DATA  —  Beijing annual averages 2013–2026
        Loaded dynamically via data-processor.js
        =========================================================== */
     let DATA_BY_YEAR = new Map();
@@ -624,7 +596,7 @@
       .attr("x", M.left)
       .attr("y", 24)
       .attr("class", "axis-title")
-      .text("年均浓度 · ANNUAL MEAN CONCENTRATION (µg/m³)");
+      .text("年均浓度（µg/m³）");
 
     // axis groups
     const gGrid = root.append("g").attr("class", "grid");
@@ -638,14 +610,14 @@
       .attr("x", W)
       .attr("y", H + 42)
       .attr("text-anchor", "end")
-      .text("CONCENTRATION  →  µg/m³");
+      .text("浓度  →  µg/m³");
 
     // Y axis title
     root.append("text")
       .attr("class", "axis-title")
       .attr("transform", `translate(-48, ${H / 2}) rotate(-90)`)
       .attr("text-anchor", "middle")
-      .text("RANK");
+      .text("排名");
 
     /* big year display – inside chart, bottom-right */
     const yearGroup = root.append("g")
@@ -656,7 +628,7 @@
       .attr("class", "year-label")
       .attr("text-anchor", "end")
       .attr("y", -110)
-      .text("YEAR / 年份");
+      .text("年份");
 
     const yearText = yearGroup.append("text")
       .attr("class", "year-display")
@@ -785,7 +757,7 @@
         .attr("class", "bar")
         .attr("x", 0)
         .attr("height", BAR_H)
-        .attr("rx", 1)
+        .attr("rx", 3)
         .attr("fill", d => d.color)
         .on("mouseenter", (event, d) => onBarHover(event, d))
         .on("mousemove", (event, d) => onBarHover(event, d))
@@ -889,8 +861,8 @@
     function updatePlayButton() {
       playBtn.classList.toggle("is-playing", isPlaying);
       playBtn.querySelector(".text").textContent =
-        (currentTime >= YEAR_MAX && !isPlaying) ? "REPLAY" :
-          (isPlaying ? "PAUSE" : "PLAY");
+        (currentTime >= YEAR_MAX && !isPlaying) ? "重新播放" :
+          (isPlaying ? "暂停" : "播放");
     }
 
     playBtn.addEventListener("click", () => {
@@ -954,9 +926,9 @@
 
       tooltipEl.innerHTML = `
     <div class="name"><span class="swatch" style="background:${d.color}"></span>${d.display}</div>
-    <div class="row"><span class="k">YEAR</span><span class="v">${yr.toFixed(1)}</span></div>
-    <div class="row"><span class="k">CONC.</span><span class="v">${v.toFixed(1)} µg/m³</span></div>
-    <div class="row"><span class="k">RANK</span><span class="v">#${d.rank + 1} of ${N}</span></div>
+    <div class="row"><span class="k">年份</span><span class="v">${yr.toFixed(1)}</span></div>
+    <div class="row"><span class="k">浓度</span><span class="v">${v.toFixed(1)} µg/m³</span></div>
+    <div class="row"><span class="k">排名</span><span class="v">#${d.rank + 1} / ${N}</span></div>
   `;
 
       tooltipEl.classList.add("is-visible");
