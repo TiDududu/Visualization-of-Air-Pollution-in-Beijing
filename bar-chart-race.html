@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>北京空气污染物排名变化 · 2013–2026 · Bar Chart Race</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --bg-2: #ffffff;
+      --ink: #18181b;
+      --ink-soft: #6b6b73;
+      --rule: #e5e5e8;
+      --rule-soft: #f0f0f3;
+      --accent: #18181b;
+
+      --pm25: #c44536;
+      --pm10: #e09f3e;
+      --no2: #5c8a4e;
+      --so2: #2e5c8a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans SC", "IBM Plex Sans", system-ui, -apple-system, "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page {
+      position: relative;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 36px 60px;
+    }
+
+    /* ---------- header ---------- */
+    .masthead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+
+    .masthead .left,
+    .masthead .right {
+      letter-spacing: 0.02em;
+    }
+
+    .masthead .right {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    .title-block {
+      text-align: center;
+      margin: 28px 0 10px;
+    }
+
+    h1 {
+      font-family: "Noto Sans SC", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: clamp(34px, 4.8vw, 54px);
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+      margin: 0 0 8px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--pm25);
+    }
+
+    .subtitle {
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      max-width: 760px;
+      margin: 10px auto 0;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .deck {
+      display: flex;
+      gap: 28px;
+      justify-content: center;
+      align-items: center;
+      margin: 22px auto 8px;
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .deck .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: 0px;
+    }
+
+    .deck span {
+      white-space: nowrap;
+    }
+
+    /* ---------- chart frame ---------- */
+    .chart-frame {
+      position: relative;
+      margin: 20px 0 0;
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      box-shadow:
+        0 1px 2px rgba(24, 24, 27, 0.04),
+        0 8px 24px -12px rgba(24, 24, 27, 0.08);
+      padding: 6px;
+    }
+
+    svg.chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    /* axes / labels */
+    .axis path,
+    .axis line {
+      stroke: var(--rule);
+      shape-rendering: crispEdges;
+    }
+
+    .axis text {
+      font-family: "IBM Plex Mono", "Noto Sans SC", monospace;
+      font-size: 11.5px;
+      fill: var(--ink-soft);
+    }
+
+    .axis-title {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      fill: var(--ink-soft);
+      font-weight: 500;
+    }
+
+    .grid line {
+      stroke: var(--rule-soft);
+      stroke-dasharray: 2 4;
+      shape-rendering: crispEdges;
+    }
+
+    .grid path {
+      stroke: none;
+    }
+
+    .bar {
+      cursor: pointer;
+      transition: filter 120ms ease;
+    }
+
+    .bar:hover {
+      filter: brightness(0.92);
+    }
+
+    .bar-label-name {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      fill: white;
+      pointer-events: none;
+      paint-order: stroke;
+    }
+
+    .bar-label-value {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 13px;
+      fill: var(--ink);
+      pointer-events: none;
+    }
+
+    .year-display {
+      font-family: "Noto Sans SC", "IBM Plex Sans", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 80px;
+      line-height: 1;
+      letter-spacing: -0.035em;
+      fill: var(--ink-soft);
+      opacity: 0.7;
+    }
+
+    .year-label {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 11.5px;
+      letter-spacing: 0.05em;
+      fill: var(--ink-soft);
+      font-weight: 500;
+    }
+
+    /* ---------- controls ---------- */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 18px;
+      padding: 14px 18px;
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+    }
+
+    button.play-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 6px;
+      min-width: 110px;
+      transition: background 150ms ease, border-color 150ms ease, transform 80ms ease;
+    }
+
+    button.play-btn:hover {
+      background: var(--pm25);
+      border-color: var(--pm25);
+    }
+
+    button.play-btn:active {
+      transform: translateY(1px);
+    }
+
+    button.play-btn:focus-visible {
+      outline: 2px solid var(--pm25);
+      outline-offset: 2px;
+    }
+
+    button.play-btn .icon {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      margin-right: 8px;
+      vertical-align: -1px;
+    }
+
+    button.play-btn.is-playing .icon {
+      width: 9px;
+      height: 10px;
+      border-left: 3px solid currentColor;
+      border-right: 3px solid currentColor;
+      background: transparent;
+      margin-right: 8px;
+    }
+
+    button.play-btn:not(.is-playing) .icon {
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid currentColor;
+    }
+
+    /* timeline scrubber */
+    .scrubber {
+      flex: 1;
+      position: relative;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    .scrubber input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(to right,
+          var(--ink) 0%,
+          var(--ink) var(--prog, 0%),
+          var(--rule) var(--prog, 0%),
+          var(--rule) 100%);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .scrubber input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg-2);
+      border: 2px solid var(--ink);
+      cursor: grab;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+      transition: transform 120ms ease;
+    }
+
+    .scrubber input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .scrubber input[type="range"]::-webkit-slider-thumb:active {
+      cursor: grabbing;
+    }
+
+    .scrubber input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg-2);
+      border: 2px solid var(--ink);
+      cursor: grab;
+    }
+
+    .year-readout {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      min-width: 60px;
+      text-align: center;
+      padding: 5px 10px;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+    }
+
+    /* tick markers below scrubber */
+    .scrubber-ticks {
+      position: absolute;
+      top: 22px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      pointer-events: none;
+    }
+
+    .scrubber-ticks span {
+      position: absolute;
+      transform: translateX(-50%);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9px;
+      color: var(--ink-soft);
+      letter-spacing: 0.02em;
+    }
+
+    .scrubber-ticks span::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      width: 1px;
+      height: 4px;
+      background: var(--rule);
+      transform: translateX(-50%);
+    }
+
+    /* ---------- tooltip ---------- */
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: var(--ink);
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+      transform: translate(-50%, calc(-100% - 10px));
+      opacity: 0;
+      transition: opacity 100ms ease;
+      z-index: 50;
+      min-width: 150px;
+      max-width: 220px;
+    }
+
+    .tooltip.is-visible {
+      opacity: 1;
+    }
+
+    .tooltip::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 8px;
+      height: 8px;
+      background: var(--ink);
+    }
+
+    .tooltip .name {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 15.5px;
+      margin-bottom: 6px;
+      line-height: 1.1;
+    }
+
+    .tooltip .name .swatch {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: 1px;
+    }
+
+    .tooltip .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .tooltip .row .k {
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
+    }
+
+    .tooltip .row .v {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+    }
+
+    /* ---------- footer ---------- */
+    .footer-notes {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--ink-soft);
+    }
+
+    .footer-notes h3 {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12.5px;
+      letter-spacing: 0.02em;
+      margin: 0 0 6px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .footer-notes p {
+      margin: 0 0 8px;
+    }
+
+    .footer-notes code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11.5px;
+      background: rgba(24, 24, 27, 0.06);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 20px 16px 40px;
+      }
+
+      .footer-notes {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="left">清华大学 · 数据可视化课程</div>
+      <div class="right">DATA · AQICN / 北京市环境保护监测中心</div>
+    </header>
+
+    <div class="title-block">
+      <h1>北京雾霾</h1>
+      <p class="subtitle">
+        年度均值竞速：四种主要污染物（PM<sub>2.5</sub>、PM<sub>10</sub>、SO₂、NO₂）<br>
+        在 2013–2026 这十四年中的排名与浓度变化。
+      </p>
+    </div>
+
+    <div class="deck">
+      <span><span class="dot" style="background:var(--pm25)"></span>PM<sub>2.5</sub></span>
+      <span><span class="dot" style="background:var(--pm10)"></span>PM<sub>10</sub></span>
+      <span><span class="dot" style="background:var(--no2)"></span>NO₂</span>
+      <span><span class="dot" style="background:var(--so2)"></span>SO₂</span>
+    </div>
+
+    <div class="chart-frame">
+      <svg class="chart" viewBox="0 0 1100 560" preserveAspectRatio="xMidYMid meet" role="img"
+        aria-label="Beijing pollutant bar chart race"></svg>
+    </div>
+
+    <div class="controls">
+      <button class="play-btn is-playing" id="playBtn" aria-label="播放 / 暂停">
+        <span class="icon"></span><span class="text">暂停</span>
+      </button>
+      <div class="scrubber">
+        <input type="range" id="scrubber" min="2013" max="2026" step="0.01" value="2013" aria-label="年份拖动条" />
+        <div class="scrubber-ticks" id="scrubberTicks"></div>
+      </div>
+      <div class="year-readout" id="yearReadout">2013</div>
+    </div>
+
+    <section class="footer-notes">
+      <div>
+        <h3>方法</h3>
+        <p>
+          前端动态解析 CSV，将 US-AQI 转换为实际浓度并计算年均值。动画由 <code>requestAnimationFrame</code> 驱动，
+          对相邻年份数据进行线性插值，实现排名的平滑交错与条长的自适应过渡。
+        </p>
+      </div>
+      <div>
+        <h3>说明</h3>
+        <p>
+          自动完成 AQI 至 µg/m³ 浓度的转换。因 2013 年原始数据不全，
+          该年起点采用了真实的年均浓度历史记录作为计算基准。
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+
+  <script src="data-processor.js"></script>
+  <script>
+    /* ===========================================================
+       DATA  —  Beijing annual averages 2013–2026
+       Loaded dynamically via data-processor.js
+       =========================================================== */
+    let DATA_BY_YEAR = new Map();
+
+    const POLLUTANTS = [
+      { key: "pm25", name: "PM2.5", display: "PM₂.₅", color: "#c44536" },
+      { key: "pm10", name: "PM10", display: "PM₁₀", color: "#e09f3e" },
+      { key: "no2", name: "NO2", display: "NO₂", color: "#5c8a4e" },
+      { key: "so2", name: "SO2", display: "SO₂", color: "#2e5c8a" }
+    ];
+    const YEAR_MIN = 2013, YEAR_MAX = 2026;
+
+    /* ===========================================================
+       LAYOUT
+       =========================================================== */
+    const svg = d3.select("svg.chart");
+    const VB_W = 1100, VB_H = 560;
+    const M = { top: 50, right: 80, bottom: 56, left: 70 };
+    const W = VB_W - M.left - M.right;
+    const H = VB_H - M.top - M.bottom;
+
+    const root = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
+
+    // chart title (axis-level)
+    svg.append("text")
+      .attr("x", M.left)
+      .attr("y", 24)
+      .attr("class", "axis-title")
+      .text("年均浓度（µg/m³）");
+
+    // axis groups
+    const gGrid = root.append("g").attr("class", "grid");
+    const gXAxis = root.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${H})`);
+    const gYAxis = root.append("g").attr("class", "axis y-axis");
+    const gBars = root.append("g").attr("class", "bars");
+
+    // X axis title
+    root.append("text")
+      .attr("class", "axis-title")
+      .attr("x", W)
+      .attr("y", H + 42)
+      .attr("text-anchor", "end")
+      .text("浓度  →  µg/m³");
+
+    // Y axis title
+    root.append("text")
+      .attr("class", "axis-title")
+      .attr("transform", `translate(-48, ${H / 2}) rotate(-90)`)
+      .attr("text-anchor", "middle")
+      .text("排名");
+
+    /* big year display – inside chart, bottom-right */
+    const yearGroup = root.append("g")
+      .attr("class", "year-group")
+      .attr("transform", `translate(${W - 6}, ${H - 16})`);
+
+    yearGroup.append("text")
+      .attr("class", "year-label")
+      .attr("text-anchor", "end")
+      .attr("y", -110)
+      .text("年份");
+
+    const yearText = yearGroup.append("text")
+      .attr("class", "year-display")
+      .attr("text-anchor", "end")
+      .attr("y", 0)
+      .text("2013");
+
+    /* Y rank scale – fixed: 4 slots */
+    const N = POLLUTANTS.length;
+    const yScale = d3.scaleBand()
+      .domain(d3.range(N))             // ranks 0..3
+      .range([0, H])
+      .paddingInner(0.28)
+      .paddingOuter(0.16);
+
+    const BAR_H = yScale.bandwidth();
+
+    // Y axis ticks: show 1..N labels
+    gYAxis.call(
+      d3.axisLeft(yScale)
+        .tickFormat(d => `#${d + 1}`)
+        .tickSize(0)
+        .tickPadding(10)
+    );
+    gYAxis.select(".domain").remove();
+
+    /* X scale – will be updated per frame */
+    let xScale = d3.scaleLinear().range([0, W]).domain([0, 200]);
+
+    /* ===========================================================
+       STATE  —  animation
+       =========================================================== */
+    let currentTime = YEAR_MIN;          // float in [YEAR_MIN, YEAR_MAX]
+    let isPlaying = true;
+    let lastTs = null;
+    const SECONDS_PER_YEAR = 1.5;        // 1.5s per year transition
+    let scrubbing = false;             // user dragging the scrubber
+
+    /* ===========================================================
+       HELPERS
+       =========================================================== */
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function getInterpolatedValues(t) {
+      // clamp
+      t = Math.max(YEAR_MIN, Math.min(YEAR_MAX, t));
+      const lo = Math.floor(t);
+      const hi = Math.min(YEAR_MAX, lo + 1);
+      const frac = t - lo;
+      const dLo = DATA_BY_YEAR.get(lo);
+      const dHi = DATA_BY_YEAR.get(hi);
+
+      return POLLUTANTS.map(p => ({
+        ...p,
+        value: lerp(dLo[p.key], dHi[p.key], frac)
+      }));
+    }
+
+    function rankAndSort(values) {
+      const sorted = values.slice().sort((a, b) => b.value - a.value);
+      sorted.forEach((d, i) => { d.rank = i; });
+      return sorted;
+    }
+
+    /* axis – only redraw when domain changed enough */
+    let lastXDomainMax = -1;
+    function updateXAxis(maxValue) {
+      // round up max for stable ticks; smooth visual change
+      const targetMax = Math.max(10, maxValue * 1.10);
+
+      // smoothly approach domain rather than snapping when user scrubs fast
+      if (lastXDomainMax < 0) {
+        xScale.domain([0, targetMax]);
+        lastXDomainMax = targetMax;
+      } else {
+        // ease toward target each frame (~12% per frame ≈ ~6 frames to settle)
+        const eased = lastXDomainMax + (targetMax - lastXDomainMax) * 0.12;
+        xScale.domain([0, eased]);
+        lastXDomainMax = eased;
+      }
+
+      // tick generation
+      const ticks = xScale.ticks(6);
+      gXAxis.call(
+        d3.axisBottom(xScale)
+          .tickValues(ticks)
+          .tickFormat(d3.format("~d"))
+          .tickSize(0)
+          .tickPadding(8)
+      );
+      gXAxis.select(".domain").attr("stroke", "var(--rule)");
+
+      // grid lines
+      const grid = gGrid.selectAll("line").data(ticks, d => d);
+      grid.join(
+        enter => enter.append("line")
+          .attr("y1", 0).attr("y2", H)
+          .attr("x1", d => xScale(d)).attr("x2", d => xScale(d)),
+        update => update
+          .attr("x1", d => xScale(d)).attr("x2", d => xScale(d)),
+        exit => exit.remove()
+      );
+    }
+
+    /* ===========================================================
+       RENDER  —  called every frame
+       =========================================================== */
+    const fmt = d3.format(".1f");
+
+    function render(t) {
+      const values = getInterpolatedValues(t);
+      const ranked = rankAndSort(values);
+      const maxVal = ranked[0].value;
+
+      updateXAxis(maxVal);
+
+      // join by pollutant key (stable identity → color stays bound to pollutant)
+      const groups = gBars.selectAll("g.bar-group")
+        .data(ranked, d => d.key);
+
+      const enter = groups.enter()
+        .append("g")
+        .attr("class", "bar-group");
+
+      enter.append("rect")
+        .attr("class", "bar")
+        .attr("x", 0)
+        .attr("height", BAR_H)
+        .attr("rx", 3)
+        .attr("fill", d => d.color)
+        .on("mouseenter", (event, d) => onBarHover(event, d))
+        .on("mousemove", (event, d) => onBarHover(event, d))
+        .on("mouseleave", () => hideTooltip());
+
+      // pollutant name label (white, inside bar – falls back outside if bar too short)
+      enter.append("text")
+        .attr("class", "bar-label-name")
+        .attr("dy", "0.35em");
+
+      // numeric value label (just outside the right end of the bar)
+      enter.append("text")
+        .attr("class", "bar-label-value")
+        .attr("dy", "0.35em");
+
+      const all = enter.merge(groups);
+
+      all.each(function (d) {
+        const g = d3.select(this);
+        const w = Math.max(0, xScale(d.value));
+        const y = yScale(d.rank);
+
+        // move the whole group on the y axis
+        g.attr("transform", `translate(0,${y})`);
+
+        g.select("rect.bar")
+          .attr("width", w)
+          .attr("height", BAR_H);
+
+        // name label – always inside
+        g.select("text.bar-label-name")
+          .attr("x", 12)
+          .attr("y", BAR_H / 2)
+          .attr("fill", "#fff")
+          .attr("text-anchor", "start")
+          // Add a subtle stroke so it remains legible if it overflows a very short bar
+          .attr("stroke", d.color)
+          .attr("stroke-width", "2.5px")
+          .text(d.display);
+
+        // value label – always to the right of the bar (prevent overlap if bar is too short)
+        g.select("text.bar-label-value")
+          .attr("x", Math.max(w + 10, 12 + measureTextWidth(d.display) + 8))
+          .attr("y", BAR_H / 2)
+          .text(fmt(d.value) + "  µg/m³");
+      });
+
+      groups.exit().remove(); // (won't trigger – the 4 keys are stable)
+
+      // year display (integer for prominence; readout shows finer)
+      yearText.text(Math.round(t));
+    }
+
+    /* light-weight text width measurer for label positioning */
+    const _measureCache = new Map();
+    let _measureNode;
+    function measureTextWidth(str) {
+      if (_measureCache.has(str)) return _measureCache.get(str);
+      if (!_measureNode) {
+        _measureNode = svg.append("text")
+          .attr("class", "bar-label-name")
+          .attr("visibility", "hidden");
+      }
+      _measureNode.text(str);
+      const w = _measureNode.node().getBBox().width;
+      _measureCache.set(str, w);
+      return w;
+    }
+
+    /* ===========================================================
+       ANIMATION LOOP  (real requestAnimationFrame)
+       =========================================================== */
+    function tick(ts) {
+      if (lastTs == null) lastTs = ts;
+      const dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+
+      if (isPlaying && !scrubbing) {
+        currentTime += dt / SECONDS_PER_YEAR;
+        if (currentTime >= YEAR_MAX) {
+          currentTime = YEAR_MAX;
+          isPlaying = false;
+          updatePlayButton();
+        }
+        syncScrubberFromTime();
+      }
+
+      render(currentTime);
+      requestAnimationFrame(tick);
+    }
+    // requestAnimationFrame(tick) will be called after data loads
+
+    /* ===========================================================
+       CONTROLS  —  play/pause + scrubber
+       =========================================================== */
+    const playBtn = document.getElementById("playBtn");
+    const scrubber = document.getElementById("scrubber");
+    const readout = document.getElementById("yearReadout");
+    const ticksDiv = document.getElementById("scrubberTicks");
+
+    function updatePlayButton() {
+      playBtn.classList.toggle("is-playing", isPlaying);
+      playBtn.querySelector(".text").textContent =
+        (currentTime >= YEAR_MAX && !isPlaying) ? "重新播放" :
+          (isPlaying ? "暂停" : "播放");
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (currentTime >= YEAR_MAX && !isPlaying) {
+        // restart
+        currentTime = YEAR_MIN;
+        lastXDomainMax = -1;
+        isPlaying = true;
+      } else {
+        isPlaying = !isPlaying;
+      }
+      updatePlayButton();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && e.target.tagName !== "INPUT") {
+        e.preventDefault();
+        playBtn.click();
+      }
+    });
+
+    function syncScrubberFromTime() {
+      scrubber.value = currentTime.toFixed(2);
+      const prog = ((currentTime - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
+      scrubber.style.setProperty("--prog", prog + "%");
+      readout.textContent = currentTime.toFixed(1);
+    }
+
+    scrubber.addEventListener("input", (e) => {
+      scrubbing = true;
+      currentTime = +e.target.value;
+      // when user drags past end, allow replay state to reset
+      if (currentTime < YEAR_MAX) isPlaying = isPlaying || false;
+      syncScrubberFromTime();
+      updatePlayButton();
+    });
+    scrubber.addEventListener("change", () => { scrubbing = false; });
+    scrubber.addEventListener("pointerdown", () => { scrubbing = true; });
+    scrubber.addEventListener("pointerup", () => { scrubbing = false; });
+
+    /* tick labels under scrubber */
+    (function buildTicks() {
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+        const span = document.createElement("span");
+        const pct = ((y - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
+        span.style.left = pct + "%";
+        span.textContent = (y % 2 === 1 || y === YEAR_MIN || y === YEAR_MAX) ? y : "·";
+        ticksDiv.appendChild(span);
+      }
+    })();
+
+    /* ===========================================================
+       TOOLTIP
+       =========================================================== */
+    const tooltipEl = document.getElementById("tooltip");
+
+    function onBarHover(event, d) {
+      const yr = currentTime;
+      // when hovering, show the underlying interpolated value at the cursor's CURRENT time
+      const v = getInterpolatedValues(yr).find(x => x.key === d.key).value;
+
+      tooltipEl.innerHTML = `
+    <div class="name"><span class="swatch" style="background:${d.color}"></span>${d.display}</div>
+    <div class="row"><span class="k">年份</span><span class="v">${yr.toFixed(1)}</span></div>
+    <div class="row"><span class="k">浓度</span><span class="v">${v.toFixed(1)} µg/m³</span></div>
+    <div class="row"><span class="k">排名</span><span class="v">#${d.rank + 1} / ${N}</span></div>
+  `;
+
+      tooltipEl.classList.add("is-visible");
+
+      // position with edge-clipping
+      const pad = 12;
+      const tw = tooltipEl.offsetWidth;
+      const th = tooltipEl.offsetHeight;
+      let x = event.clientX;
+      let y = event.clientY;
+
+      // keep tooltip inside viewport
+      if (x - tw / 2 < pad) x = tw / 2 + pad;
+      if (x + tw / 2 > window.innerWidth - pad) x = window.innerWidth - tw / 2 - pad;
+      if (y - th - 14 < pad) y = event.clientY + th + 24; // flip below cursor if too close to top
+      tooltipEl.style.left = x + "px";
+      tooltipEl.style.top = y + "px";
+    }
+
+    function hideTooltip() {
+      tooltipEl.classList.remove("is-visible");
+    }
+
+    /* hide tooltip if user scrolls / leaves window */
+    window.addEventListener("scroll", hideTooltip, { passive: true });
+    window.addEventListener("blur", hideTooltip);
+
+    // Initialize Data and start
+    window.loadAndProcessData('beijing-air-quality.csv').then(data => {
+      DATA_BY_YEAR = new Map(data.map(r => [r.year, r]));
+
+      syncScrubberFromTime();
+      updatePlayButton();
+
+      // Start animation loop
+      requestAnimationFrame(tick);
+    }).catch(err => {
+      console.error("Failed to load or process data:", err);
+      alert("Failed to load data. See console for details.");
+    });
+
+  </script>
+</body>
+
+</html>
