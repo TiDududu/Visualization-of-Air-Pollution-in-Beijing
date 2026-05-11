@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Beijing Air Quality — D3 Visualization</title>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f7f8fa;
+        color: #222;
+    }
+
+    .page {
+        width: 1500px;
+        margin: 0 auto;
+        padding: 30px 40px;
+        box-sizing: border-box;
+    }
+
+    h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        margin: 0 0 24px 0;
+        font-size: 15px;
+        color: #666;
+    }
+
+    .controls {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 18px;
+        padding: 14px 18px;
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .control-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .control-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .checkboxes {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .checkboxes label {
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .year-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    #yearSlider {
+        width: 320px;
+    }
+
+    #yearLabel {
+        min-width: 80px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    svg {
+        display: block;
+    }
+
+    .tooltip {
+        position: absolute;
+        pointer-events: none;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.45;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        opacity: 0;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <h1>Beijing Air Quality Trends</h1>
+    <p class="subtitle">
+        Daily pollutant concentrations with rolling averages and policy intervention periods.
+    </p>
+
+    <div class="controls">
+
+        <div class="control-group">
+            <div class="control-title">Pollutants:</div>
+
+            <div class="checkboxes">
+                <label><input type="checkbox" class="pollutant-checkbox" value="pm25" checked> PM2.5</label>
+                <label><input type="checkbox" class="pollutant-checkbox" value="pm10" checked> PM10</label>
+                <label><input type="checkbox" class="pollutant-checkbox" value="o3" checked> O3</label>
+                <label><input type="checkbox" class="pollutant-checkbox" value="no2" checked> NO2</label>
+                <label><input type="checkbox" class="pollutant-checkbox" value="so2" checked> SO2</label>
+                <label><input type="checkbox" class="pollutant-checkbox" value="co" checked> CO</label>
+            </div>
+        </div>
+
+        <div class="control-group year-control">
+            <div class="control-title">Year:</div>
+
+            <input 
+                type="range" 
+                id="yearSlider" 
+                min="0" 
+                max="13" 
+                step="1" 
+                value="0"
+            >
+
+            <div id="yearLabel">All period</div>
+        </div>
+
+    </div>
+
+    <div class="chart-wrapper">
+        <svg width="1400" height="720"></svg>
+        <div class="tooltip"></div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
