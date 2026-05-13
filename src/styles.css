@@ -238,23 +238,6 @@ h3 {
   min-height: 430px;
 }
 
-.motion-policy-card rect {
-  fill: rgba(255, 255, 255, 0.96);
-  stroke: #cfd8d2;
-  stroke-width: 1;
-}
-
-.motion-policy-card text {
-  fill: #24302a;
-  font-size: 12px;
-}
-
-.motion-policy-card .policy-card-year {
-  fill: var(--accent);
-  font-size: 13px;
-  font-weight: 800;
-}
-
 .motion-policy-timeline-base {
   stroke: #c9d6cf;
   stroke-width: 1.2;
@@ -267,10 +250,10 @@ h3 {
 }
 
 .motion-policy-timeline-stem {
-  stroke: #c23a2b;
+  stroke: #c5d5cb;
   stroke-dasharray: 2 4;
   stroke-width: 1;
-  opacity: 0.62;
+  opacity: 0.82;
 }
 
 .motion-policy-timeline-dot {
@@ -279,18 +262,18 @@ h3 {
   stroke-width: 2;
 }
 
-.motion-policy-timeline-cover-frame {
+.motion-policy-hover-frame {
   fill: #f8faf8;
   stroke: #c5d5cb;
-  stroke-width: 1.1;
-  filter: drop-shadow(0 8px 14px rgba(29, 48, 38, 0.11));
+  stroke-width: 1;
+  filter: drop-shadow(0 16px 28px rgba(29, 48, 38, 0.16));
 }
 
-.motion-policy-timeline-cover {
-  clip-path: inset(0 round 5px);
+.motion-policy-hover-cover {
+  clip-path: inset(0 round 6px);
 }
 
-.motion-policy-timeline-cover-fallback {
+.motion-policy-hover-fallback {
   fill: #eef4ef;
   stroke: #c5d5cb;
   stroke-width: 1;
@@ -298,18 +281,48 @@ h3 {
 
 .motion-policy-timeline-label {
   fill: #16211b;
-  font-size: 10.3px;
+  font-size: 10.5px;
   font-weight: 800;
   pointer-events: none;
-  text-anchor: start;
-  dominant-baseline: middle;
+  text-anchor: middle;
 }
 
 .motion-policy-timeline-item {
   cursor: pointer;
 }
 
-.motion-policy-timeline-item:hover .motion-policy-timeline-cover-frame {
+.motion-policy-axis-year {
+  fill: #617067;
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.motion-policy-axis-change {
+  fill: #2f7d5c;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.motion-policy-hover-card {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.motion-policy-hover-name {
+  fill: #16211b;
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.motion-policy-timeline-item:hover .motion-policy-hover-card {
+  opacity: 1;
+}
+
+.motion-policy-timeline-item:hover .motion-policy-hover-frame {
   stroke: #2f7d5c;
   stroke-width: 2;
 }
