@@ -112,7 +112,6 @@ let motionIndex = 0;
 let motionTimer;
 let motionIsPlaying = false;
 let monthlyMotionData = [];
-let motionTimelineMonths = [];
 let motionPoliciesByMonth = new Map();
 let motionPolicyEvents = [];
 let motionPolicyWindows = [];
@@ -463,8 +462,7 @@ function renderMonthlyMotionChart(data) {
   const monthExtent = d3.extent(monthlyMotionData, d => d.date);
   motionPolicyEvents = data.policies
     .map(policy => ({ ...policy, dateObject: parsePolicyDate(policy.date), cover: policyCoverPath(policy.name) }))
-    .filter(policy => policy.dateObject && policy.dateObject <= monthExtent[1]);
-  motionTimelineMonths = buildMotionTimelineMonths(monthlyMotionData, motionPolicyEvents);
+    .filter(policy => policy.dateObject && policy.dateObject >= monthExtent[0] && policy.dateObject <= monthExtent[1]);
   motionPoliciesByMonth = d3.group(motionPolicyEvents, policy => monthKey(policy.dateObject));
   motionPolicyWindows = data.policyWindows.map(windowItem => ({
     ...windowItem,
@@ -558,7 +556,7 @@ function renderMotionFrame(animate) {
 
   const plot = svgMotion.select(".motion-plot");
   const x = d3.scaleBand()
-    .domain(motionTimelineMonths)
+    .domain(monthlyMotionData.map(d => d.key))
     .range([0, innerWidth])
     .padding(0.18);
   const scaleSource = motionScaleMode === "tracking" ? visibleData : monthlyMotionData;
@@ -570,7 +568,7 @@ function renderMotionFrame(animate) {
   const transition = animate ? d3.transition().duration(360).ease(d3.easeCubicOut) : null;
 
   plot.select(".motion-x-axis")
-    .call(d3.axisBottom(x).tickValues(motionTimelineMonths.filter(key => key.endsWith("-01"))).tickFormat(d => d.slice(0, 4)));
+    .call(d3.axisBottom(x).tickValues(monthlyMotionData.filter(d => d.month === 1).map(d => d.key)).tickFormat(d => d.slice(0, 4)));
   plot.select(".motion-y-axis")
     .transition(transition || d3.transition().duration(0))
     .call(d3.axisLeft(y).ticks(6));
@@ -590,7 +588,7 @@ function renderMotionFrame(animate) {
     .attr("class", "motion-scale-note motion-policy-note")
     .attr("x", margin.left)
     .attr("y", heightValue - 14)
-    .text("政策轴含 main 中 16 条政策；2014 前政策标为基准前，柱状图从污染数据可比起点 2014-01 开始");
+    .text("政策轴与污染柱状图统一从 2014-01 开始；下方为相较 2014-01 的污染物变化");
 
   renderMotionPolicyTimeline(plot.select(".motion-policy-timeline"), x, current.date, innerWidth);
   renderMotionStageBands(plot, x, innerHeight);
@@ -931,18 +929,6 @@ function monthKey(dateValue) {
   return `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function buildMotionTimelineMonths(monthlyData, policies) {
-  const firstDataDate = monthlyData[0].date;
-  const lastDataDate = monthlyData[monthlyData.length - 1].date;
-  const firstPolicyYear = d3.min(policies, policy => policy.dateObject.getFullYear()) ?? firstDataDate.getFullYear();
-  const start = new Date(Math.min(firstPolicyYear, firstDataDate.getFullYear()), 0, 1);
-  const months = [];
-  for (let cursor = new Date(start); cursor <= lastDataDate; cursor.setMonth(cursor.getMonth() + 1)) {
-    months.push(monthKey(cursor));
-  }
-  return months;
-}
-
 function policyCoverPath(name) {
   return encodeURI(`政策封面/《${name}》_00.png`);
 }
@@ -974,9 +960,6 @@ function wrapText(value, size, maxLines) {
 function pollutionChangeBadge(policy) {
   const baseline = monthlyMotionData[0]?.[motionMetric];
   const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
-  if (policy.dateObject < monthlyMotionData[0].date) {
-    return "基准前";
-  }
   if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
     return "无数据";
   }
@@ -991,9 +974,6 @@ function pollutionChangeText(policy) {
   const baseline = monthlyMotionData[0]?.[motionMetric];
   const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
   const label = motionMetricConfig[motionMetric].label;
-  if (policy.dateObject < monthlyMotionData[0].date) {
-    return `${label}: 政策早于 2014-01 可比污染数据起点`;
-  }
   if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
     return `${label}: 缺少可比月度数据`;
   }
