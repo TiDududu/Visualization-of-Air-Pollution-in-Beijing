@@ -194,9 +194,16 @@ Promise.all([loadGeoJson(), d3.json(dailyDataPath)]).then(([geojson, data]) => {
     .text(`地图数据加载失败：${error.message}`);
 });
 
-d3.json(policyDataPath).then(renderPolicyDashboard).catch(error => {
+loadPolicyImpactData().then(renderPolicyDashboard).catch(error => {
   d3.select("#data-note").text(`政策影响数据加载失败：${error.message}`);
 });
+
+async function loadPolicyImpactData() {
+  if (window.policyImpactSummaryData) {
+    return window.policyImpactSummaryData;
+  }
+  return d3.json(policyDataPath);
+}
 
 async function loadGeoJson() {
   const text = await d3.text(geojsonPath);
