@@ -112,6 +112,7 @@ let motionIndex = 0;
 let motionTimer;
 let motionIsPlaying = false;
 let monthlyMotionData = [];
+let motionTimelineMonths = [];
 let motionPoliciesByMonth = new Map();
 let motionPolicyEvents = [];
 let motionPolicyWindows = [];
@@ -462,7 +463,8 @@ function renderMonthlyMotionChart(data) {
   const monthExtent = d3.extent(monthlyMotionData, d => d.date);
   motionPolicyEvents = data.policies
     .map(policy => ({ ...policy, dateObject: parsePolicyDate(policy.date), cover: policyCoverPath(policy.name) }))
-    .filter(policy => policy.dateObject && policy.dateObject >= monthExtent[0] && policy.dateObject <= monthExtent[1]);
+    .filter(policy => policy.dateObject && policy.dateObject <= monthExtent[1]);
+  motionTimelineMonths = buildMotionTimelineMonths(monthlyMotionData, motionPolicyEvents);
   motionPoliciesByMonth = d3.group(motionPolicyEvents, policy => monthKey(policy.dateObject));
   motionPolicyWindows = data.policyWindows.map(windowItem => ({
     ...windowItem,
@@ -556,7 +558,7 @@ function renderMotionFrame(animate) {
 
   const plot = svgMotion.select(".motion-plot");
   const x = d3.scaleBand()
-    .domain(monthlyMotionData.map(d => d.key))
+    .domain(motionTimelineMonths)
     .range([0, innerWidth])
     .padding(0.18);
   const scaleSource = motionScaleMode === "tracking" ? visibleData : monthlyMotionData;
@@ -568,7 +570,7 @@ function renderMotionFrame(animate) {
   const transition = animate ? d3.transition().duration(360).ease(d3.easeCubicOut) : null;
 
   plot.select(".motion-x-axis")
-    .call(d3.axisBottom(x).tickValues(monthlyMotionData.filter(d => d.month === 1).map(d => d.key)).tickFormat(d => d.slice(0, 4)));
+    .call(d3.axisBottom(x).tickValues(motionTimelineMonths.filter(key => key.endsWith("-01"))).tickFormat(d => d.slice(0, 4)));
   plot.select(".motion-y-axis")
     .transition(transition || d3.transition().duration(0))
     .call(d3.axisLeft(y).ticks(6));
@@ -588,7 +590,7 @@ function renderMotionFrame(animate) {
     .attr("class", "motion-scale-note motion-policy-note")
     .attr("x", margin.left)
     .attr("y", heightValue - 14)
-    .text("上方政策名可悬停查看政策封面；事件轴下方=年份与相较 2014-01 的污染物变化");
+    .text("政策轴含 main 中 16 条政策；2014 前政策标为基准前，柱状图从污染数据可比起点 2014-01 开始");
 
   renderMotionPolicyTimeline(plot.select(".motion-policy-timeline"), x, current.date, innerWidth);
   renderMotionStageBands(plot, x, innerHeight);
@@ -668,10 +670,10 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     x,
     innerWidth
   );
-  const axisY = -64;
-  const hoverCardWidth = 116;
-  const hoverCardHeight = 166;
-  const hoverImageHeight = 126;
+  const axisY = -70;
+  const hoverCardWidth = 92;
+  const hoverCardHeight = 106;
+  const hoverImageHeight = 72;
   layer.selectAll(".motion-policy-timeline-base")
     .data([null])
     .join("line")
@@ -703,7 +705,10 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     const item = d3.select(this);
     item
       .attr("transform", "translate(0,0)")
-      .on("mousemove", event => showPolicyTooltip(event, `${monthKey(policy.dateObject)} 政策`, `${policy.name}<br>${pollutionChangeText(policy)}<br>${truncateText(policy.measures || policy.summary, 58)}`))
+      .on("mouseenter", function () {
+        d3.select(this).raise();
+        hideTooltip();
+      })
       .on("mouseleave", hideTooltip);
 
     item.selectAll("line.motion-policy-timeline-stem")
@@ -727,7 +732,7 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
       .data([policy])
       .join("text")
       .attr("class", "motion-policy-axis-year")
-      .attr("x", d => d.dotX)
+      .attr("x", d => d.annotationX)
       .attr("y", d => axisY + 20 + d.annotationLane * 14)
       .text(d => d.showYear ? d.year : "");
 
@@ -735,7 +740,7 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
       .data([policy])
       .join("text")
       .attr("class", "motion-policy-axis-change")
-      .attr("x", d => d.dotX)
+      .attr("x", d => d.annotationX)
       .attr("y", d => axisY + 36 + d.annotationLane * 14)
       .text(d => pollutionChangeBadge(d));
 
@@ -744,13 +749,8 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
       .join("text")
       .attr("class", "motion-policy-timeline-label")
       .attr("x", d => d.labelX)
-      .attr("y", d => d.labelY);
-    label.selectAll("tspan")
-      .data(d => wrapPolicyAxisName(d.name).map((line, index) => ({ line, index, x: d.labelX })))
-      .join("tspan")
-      .attr("x", d => d.x)
-      .attr("dy", d => d.index === 0 ? 0 : 13)
-      .text(d => d.line);
+      .attr("y", d => d.labelY)
+      .text(d => policyAxisLabel(d.name));
 
     const hoverCard = item.selectAll("g.motion-policy-hover-card")
       .data([policy])
@@ -804,10 +804,11 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
 }
 
 function layoutMotionPolicyTimeline(events, x, innerWidth) {
-  const labelWidth = 112;
-  const labelLaneGap = 34;
-  const annotationWidth = 54;
-  const minGap = 7;
+  const labelWidth = 70;
+  const labelLaneGap = 18;
+  const annotationWidth = 48;
+  const minGap = 5;
+  const labelBaseY = -128;
   const labelLanes = [];
   const annotationLanes = [];
   const seenYears = new Set();
@@ -818,37 +819,42 @@ function layoutMotionPolicyTimeline(events, x, innerWidth) {
     }))
     .sort((a, b) => d3.ascending(a.dotX, b.dotX) || d3.ascending(a.id, b.id))
     .map(policy => {
-      const labelX = Math.max(labelWidth / 2, Math.min(innerWidth - labelWidth / 2, policy.dotX));
-      const labelLeft = labelX - labelWidth / 2;
-      let labelLane = labelLanes.findIndex(lastRight => labelLeft >= lastRight + minGap);
-      if (labelLane === -1) {
-        labelLane = labelLanes.length;
-        labelLanes.push(-Infinity);
-      }
-      labelLanes[labelLane] = labelLeft + labelWidth;
-
-      const annotationLeft = policy.dotX - annotationWidth / 2;
-      let annotationLane = annotationLanes.findIndex(lastRight => annotationLeft >= lastRight + minGap);
-      if (annotationLane === -1) {
-        annotationLane = annotationLanes.length;
-        annotationLanes.push(-Infinity);
-      }
-      annotationLanes[annotationLane] = annotationLeft + annotationWidth;
+      const labelPlacement = placeTimelineLabel(labelLanes, policy.dotX, labelWidth, innerWidth, minGap, 110);
+      const annotationPlacement = placeTimelineLabel(annotationLanes, policy.dotX, annotationWidth, innerWidth, minGap, 70);
 
       const showYear = !seenYears.has(policy.year);
       seenYears.add(policy.year);
-      const hoverX = Math.max(0, Math.min(innerWidth - 116, labelX - 58));
-      const labelY = -92 - labelLane * labelLaneGap;
+      const hoverX = Math.max(0, Math.min(innerWidth - 92, labelPlacement.x - 46));
+      const labelY = labelBaseY + labelPlacement.lane * labelLaneGap;
       return {
         ...policy,
-        labelX,
+        labelX: labelPlacement.x,
         labelY,
-        annotationLane,
+        annotationX: annotationPlacement.x,
+        annotationLane: annotationPlacement.lane,
         showYear,
         hoverX,
-        hoverY: Math.max(-236, labelY - 182)
+        hoverY: -224
       };
     });
+}
+
+function placeTimelineLabel(lanes, anchorX, width, innerWidth, minGap, maxShift) {
+  const preferredLeft = Math.max(0, Math.min(innerWidth - width, anchorX - width / 2));
+  const candidates = lanes
+    .map((lastRight, lane) => {
+      const left = Math.max(preferredLeft, lastRight + minGap);
+      return { lane, left, shift: Math.abs(left + width / 2 - anchorX) };
+    })
+    .filter(candidate => candidate.left <= innerWidth - width && candidate.shift <= maxShift);
+  const best = candidates.sort((a, b) => d3.ascending(a.lane, b.lane) || d3.ascending(a.shift, b.shift))[0];
+  if (best) {
+    lanes[best.lane] = best.left + width;
+    return { lane: best.lane, x: best.left + width / 2 };
+  }
+  const lane = lanes.length;
+  lanes.push(preferredLeft + width);
+  return { lane, x: preferredLeft + width / 2 };
 }
 
 function renderMotionStageBands(plot, x, innerHeight) {
@@ -925,6 +931,18 @@ function monthKey(dateValue) {
   return `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function buildMotionTimelineMonths(monthlyData, policies) {
+  const firstDataDate = monthlyData[0].date;
+  const lastDataDate = monthlyData[monthlyData.length - 1].date;
+  const firstPolicyYear = d3.min(policies, policy => policy.dateObject.getFullYear()) ?? firstDataDate.getFullYear();
+  const start = new Date(Math.min(firstPolicyYear, firstDataDate.getFullYear()), 0, 1);
+  const months = [];
+  for (let cursor = new Date(start); cursor <= lastDataDate; cursor.setMonth(cursor.getMonth() + 1)) {
+    months.push(monthKey(cursor));
+  }
+  return months;
+}
+
 function policyCoverPath(name) {
   return encodeURI(`政策封面/《${name}》_00.png`);
 }
@@ -956,6 +974,9 @@ function wrapText(value, size, maxLines) {
 function pollutionChangeBadge(policy) {
   const baseline = monthlyMotionData[0]?.[motionMetric];
   const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
+  if (policy.dateObject < monthlyMotionData[0].date) {
+    return "基准前";
+  }
   if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
     return "无数据";
   }
@@ -970,6 +991,9 @@ function pollutionChangeText(policy) {
   const baseline = monthlyMotionData[0]?.[motionMetric];
   const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
   const label = motionMetricConfig[motionMetric].label;
+  if (policy.dateObject < monthlyMotionData[0].date) {
+    return `${label}: 政策早于 2014-01 可比污染数据起点`;
+  }
   if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
     return `${label}: 缺少可比月度数据`;
   }
@@ -988,6 +1012,30 @@ function wrapPolicyAxisName(name) {
     .replace(/\s+/g, " ")
     .trim();
   return wrapText(compact, 8, 2);
+}
+
+function policyAxisLabel(name) {
+  const text = String(name || "");
+  const aliases = [
+    ["第十六阶段控制大气污染措施", "十六阶段"],
+    ["2011-2015", "清洁空气"],
+    ["压减燃煤", "压减燃煤"],
+    ["2012—2020年大气污染治理措施", "大气治理"],
+    ["工业大气污染治理", "工业治理"],
+    ["2013-2017", "清洁空气"],
+    ["京津冀及周边地区", "京津冀细则"],
+    ["大气污染防治条例", "防治条例"],
+    ["蓝天保卫战", "蓝天保卫战"],
+    ["十四五", "十四五规划"],
+    ["2022 年行动计划", "2022行动"],
+    ["2023 年行动计划", "2023行动"],
+    ["2024 年行动计划", "2024行动"],
+    ["2025 年行动计划", "2025行动"],
+    ["2026年行动计划", "2026行动"],
+    ["扬尘专项治理", "扬尘攻坚"]
+  ];
+  const alias = aliases.find(([pattern]) => text.includes(pattern));
+  return alias ? alias[1] : truncateText(text.replace(/^北京市?/, ""), 6);
 }
 
 function createChart(selector, widthValue, heightValue) {
