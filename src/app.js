@@ -454,7 +454,7 @@ function renderMonthlyMotionChart(data) {
     }));
   const monthExtent = d3.extent(monthlyMotionData, d => d.date);
   motionPolicyEvents = data.policies
-    .map(policy => ({ ...policy, dateObject: parsePolicyDate(policy.date) }))
+    .map(policy => ({ ...policy, dateObject: parsePolicyDate(policy.date), cover: policyCoverPath(policy.name) }))
     .filter(policy => policy.dateObject && policy.dateObject >= monthExtent[0] && policy.dateObject <= monthExtent[1]);
   motionPoliciesByMonth = d3.group(motionPolicyEvents, policy => monthKey(policy.dateObject));
   motionPolicyWindows = data.policyWindows.map(windowItem => ({
@@ -520,8 +520,8 @@ function renderMotionFrame(animate) {
   d3.select("#motion-current-month").text(current.key);
 
   const widthValue = 980;
-  const heightValue = 430;
-  const margin = { top: 92, right: 24, bottom: 52, left: 58 };
+  const heightValue = 500;
+  const margin = { top: 162, right: 24, bottom: 52, left: 58 };
   const innerWidth = widthValue - margin.left - margin.right;
   const innerHeight = heightValue - margin.top - margin.bottom;
   let svgMotion = d3.select("#monthly-motion-chart").select("svg");
@@ -657,7 +657,10 @@ function renderMotionFrame(animate) {
 
 function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
   const activeEvents = motionPolicyEvents.filter(policy => policy.dateObject <= currentDate);
-  const axisY = -48;
+  const axisY = -58;
+  const cardWidth = 104;
+  const cardHeight = 86;
+  const imagePadding = 5;
   layer.selectAll(".motion-policy-timeline-base")
     .data([null])
     .join("line")
@@ -672,7 +675,7 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     .join("text")
     .attr("class", "motion-policy-timeline-title")
     .attr("x", 0)
-    .attr("y", axisY - 30)
+    .attr("y", axisY - 86)
     .text("政策出台时间线");
 
   const items = layer.selectAll(".motion-policy-timeline-item")
@@ -690,13 +693,25 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     .attr("cy", axisY)
     .attr("r", 5.6);
   entered.append("rect")
-    .attr("class", "motion-policy-timeline-label-bg")
+    .attr("class", "motion-policy-timeline-cover-frame")
     .attr("rx", 6)
-    .attr("width", 138)
-    .attr("height", 24);
+    .attr("width", cardWidth)
+    .attr("height", cardHeight);
+  entered.append("image")
+    .attr("class", "motion-policy-timeline-cover")
+    .attr("x", imagePadding)
+    .attr("width", cardWidth - imagePadding * 2)
+    .attr("height", 54)
+    .attr("preserveAspectRatio", "xMidYMid slice")
+    .attr("href", d => d.cover);
+  entered.append("rect")
+    .attr("class", "motion-policy-timeline-cover-fallback")
+    .attr("x", imagePadding)
+    .attr("width", cardWidth - imagePadding * 2)
+    .attr("height", 54)
+    .attr("rx", 4);
   entered.append("text")
     .attr("class", "motion-policy-timeline-label")
-    .attr("x", 8)
     .attr("dy", "0.35em");
 
   const merged = entered.merge(items);
@@ -710,15 +725,22 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
   merged.select(".motion-policy-timeline-stem")
     .attr("x1", 0)
     .attr("x2", 0)
-    .attr("y2", (_, index) => timelineLabelY(index) + 10);
+    .attr("y2", (_, index) => timelineLabelY(index) + cardHeight);
   merged.select(".motion-policy-timeline-dot")
     .attr("cx", 0);
-  merged.select(".motion-policy-timeline-label-bg")
-    .attr("x", d => timelineLabelX(d, x, innerWidth))
-    .attr("y", (_, index) => timelineLabelY(index) - 10);
+  merged.select(".motion-policy-timeline-cover-frame")
+    .attr("x", d => timelineLabelX(d, x, innerWidth, cardWidth))
+    .attr("y", (_, index) => timelineLabelY(index));
+  merged.select(".motion-policy-timeline-cover")
+    .attr("x", d => timelineLabelX(d, x, innerWidth, cardWidth) + imagePadding)
+    .attr("y", (_, index) => timelineLabelY(index) + imagePadding);
+  merged.select(".motion-policy-timeline-cover-fallback")
+    .attr("x", d => timelineLabelX(d, x, innerWidth, cardWidth) + imagePadding)
+    .attr("y", (_, index) => timelineLabelY(index) + imagePadding)
+    .style("display", d => d.cover ? "none" : null);
   merged.select(".motion-policy-timeline-label")
-    .attr("x", d => timelineLabelX(d, x, innerWidth) + 8)
-    .attr("y", (_, index) => timelineLabelY(index) + 1)
+    .attr("x", d => timelineLabelX(d, x, innerWidth, cardWidth) + cardWidth / 2)
+    .attr("y", (_, index) => timelineLabelY(index) + 70)
     .text(d => policyShortName(d.name));
   entered.transition()
     .duration(240)
@@ -731,13 +753,12 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
 }
 
 function timelineLabelY(index) {
-  return [-72, -22, -92][index % 3];
+  return [-148, -122, -96][index % 3];
 }
 
-function timelineLabelX(policy, x, innerWidth) {
-  const labelWidth = 138;
+function timelineLabelX(policy, x, innerWidth, labelWidth = 104) {
   const xValue = (x(monthKey(policy.dateObject)) ?? 0) + x.bandwidth() / 2;
-  return Math.max(-xValue, Math.min(-8, innerWidth - xValue - labelWidth));
+  return Math.max(-xValue, Math.min(-labelWidth / 2, innerWidth - xValue - labelWidth));
 }
 
 function renderMotionStageBands(plot, x, innerHeight) {
@@ -853,6 +874,10 @@ function parsePolicyDate(value) {
 
 function monthKey(dateValue) {
   return `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function policyCoverPath(name) {
+  return encodeURI(`政策封面/《${name}》_00.png`);
 }
 
 function formatMotionValue(value, metric) {
