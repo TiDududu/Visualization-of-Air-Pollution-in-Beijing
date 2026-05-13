@@ -690,104 +690,117 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     .text("政策出台时间线");
 
   const items = layer.selectAll(".motion-policy-timeline-item")
-    .data(activeEvents, d => d.id);
-  const entered = items.enter()
-    .append("g")
-    .attr("class", "motion-policy-timeline-item")
-    .style("opacity", 0);
-  entered.append("line")
-    .attr("class", "motion-policy-timeline-stem")
-    .attr("y1", axisY);
-  entered.append("circle")
-    .attr("class", "motion-policy-timeline-dot")
-    .attr("r", 5.6);
-  entered.append("text")
-    .attr("class", "motion-policy-axis-year");
-  entered.append("text")
-    .attr("class", "motion-policy-axis-change");
-  entered.append("text")
-    .attr("class", "motion-policy-timeline-label")
-    .attr("dy", "0.35em");
-  const hoverCard = entered.append("g")
-    .attr("class", "motion-policy-hover-card");
-  hoverCard.append("rect")
-    .attr("class", "motion-policy-hover-frame")
-    .attr("rx", 7)
-    .attr("width", hoverCardWidth)
-    .attr("height", hoverCardHeight);
-  hoverCard.append("image")
-    .attr("class", "motion-policy-hover-cover")
-    .attr("x", 5)
-    .attr("y", 5)
-    .attr("width", hoverCardWidth - 10)
-    .attr("height", hoverImageHeight)
-    .attr("preserveAspectRatio", "xMidYMid slice")
-    .attr("href", d => d.cover);
-  hoverCard.append("rect")
-    .attr("class", "motion-policy-hover-fallback")
-    .attr("x", 5)
-    .attr("y", 5)
-    .attr("width", hoverCardWidth - 10)
-    .attr("height", hoverImageHeight)
-    .attr("rx", 6);
-  hoverCard.append("text")
-    .attr("class", "motion-policy-hover-name");
+    .data(activeEvents, d => d.id)
+    .join(
+      enter => enter.append("g")
+        .attr("class", "motion-policy-timeline-item")
+        .style("opacity", 0),
+      update => update,
+      exit => exit.transition().duration(160).style("opacity", 0).remove()
+    );
 
-  const merged = entered.merge(items);
-  merged
-    .attr("transform", "translate(0,0)")
-    .on("mousemove", (event, d) => showPolicyTooltip(event, `${monthKey(d.dateObject)} 政策`, `${d.name}<br>${pollutionChangeText(d)}<br>${truncateText(d.measures || d.summary, 58)}`))
-    .on("mouseleave", hideTooltip);
-  merged.select(".motion-policy-timeline-stem")
-    .attr("x1", d => d.dotX)
-    .attr("x2", d => d.labelX)
-    .attr("y1", axisY)
-    .attr("y2", d => d.labelY + 8);
-  merged.select(".motion-policy-timeline-dot")
-    .attr("cx", d => d.dotX)
-    .attr("cy", axisY);
-  merged.select(".motion-policy-axis-year")
-    .attr("x", d => d.dotX)
-    .attr("y", d => axisY + 20 + d.annotationLane * 14)
-    .text(d => d.showYear ? d.year : "");
-  merged.select(".motion-policy-axis-change")
-    .attr("x", d => d.dotX)
-    .attr("y", d => axisY + 36 + d.annotationLane * 14)
-    .text(d => pollutionChangeBadge(d));
-  merged.select(".motion-policy-timeline-label")
-    .attr("x", d => d.labelX)
-    .attr("y", d => d.labelY)
-    .text(null)
-    .selectAll("tspan")
-    .data(d => wrapPolicyAxisName(d.name).map((line, index) => ({ line, index, x: d.labelX })))
-    .join("tspan")
-    .attr("x", d => d.x)
-    .attr("dy", d => d.index === 0 ? 0 : 13)
-    .text(d => d.line);
-  merged.select(".motion-policy-hover-card")
-    .attr("transform", d => `translate(${d.hoverX},${d.hoverY})`);
-  merged.select(".motion-policy-hover-cover")
-    .attr("href", d => d.cover);
-  merged.select(".motion-policy-hover-fallback")
-    .style("display", d => d.cover ? "none" : null);
-  merged.select(".motion-policy-hover-name")
-    .attr("x", hoverCardWidth / 2)
-    .attr("y", hoverImageHeight + 21)
-    .text(null)
-    .selectAll("tspan")
-    .data(d => wrapText(d.name, 9, 2).map((line, index) => ({ line, index })))
-    .join("tspan")
-    .attr("x", hoverCardWidth / 2)
-    .attr("dy", d => d.index === 0 ? 0 : 14)
-    .text(d => d.line);
-  entered.transition()
+  items.each(function renderPolicyEvent(policy) {
+    const item = d3.select(this);
+    item
+      .attr("transform", "translate(0,0)")
+      .on("mousemove", event => showPolicyTooltip(event, `${monthKey(policy.dateObject)} 政策`, `${policy.name}<br>${pollutionChangeText(policy)}<br>${truncateText(policy.measures || policy.summary, 58)}`))
+      .on("mouseleave", hideTooltip);
+
+    item.selectAll("line.motion-policy-timeline-stem")
+      .data([policy])
+      .join("line")
+      .attr("class", "motion-policy-timeline-stem")
+      .attr("x1", d => d.dotX)
+      .attr("x2", d => d.labelX)
+      .attr("y1", axisY)
+      .attr("y2", d => d.labelY + 8);
+
+    item.selectAll("circle.motion-policy-timeline-dot")
+      .data([policy])
+      .join("circle")
+      .attr("class", "motion-policy-timeline-dot")
+      .attr("cx", d => d.dotX)
+      .attr("cy", axisY)
+      .attr("r", 5.6);
+
+    item.selectAll("text.motion-policy-axis-year")
+      .data([policy])
+      .join("text")
+      .attr("class", "motion-policy-axis-year")
+      .attr("x", d => d.dotX)
+      .attr("y", d => axisY + 20 + d.annotationLane * 14)
+      .text(d => d.showYear ? d.year : "");
+
+    item.selectAll("text.motion-policy-axis-change")
+      .data([policy])
+      .join("text")
+      .attr("class", "motion-policy-axis-change")
+      .attr("x", d => d.dotX)
+      .attr("y", d => axisY + 36 + d.annotationLane * 14)
+      .text(d => pollutionChangeBadge(d));
+
+    const label = item.selectAll("text.motion-policy-timeline-label")
+      .data([policy])
+      .join("text")
+      .attr("class", "motion-policy-timeline-label")
+      .attr("x", d => d.labelX)
+      .attr("y", d => d.labelY);
+    label.selectAll("tspan")
+      .data(d => wrapPolicyAxisName(d.name).map((line, index) => ({ line, index, x: d.labelX })))
+      .join("tspan")
+      .attr("x", d => d.x)
+      .attr("dy", d => d.index === 0 ? 0 : 13)
+      .text(d => d.line);
+
+    const hoverCard = item.selectAll("g.motion-policy-hover-card")
+      .data([policy])
+      .join("g")
+      .attr("class", "motion-policy-hover-card")
+      .attr("transform", d => `translate(${d.hoverX},${d.hoverY})`);
+    hoverCard.selectAll("rect.motion-policy-hover-frame")
+      .data([policy])
+      .join("rect")
+      .attr("class", "motion-policy-hover-frame")
+      .attr("rx", 7)
+      .attr("width", hoverCardWidth)
+      .attr("height", hoverCardHeight);
+    hoverCard.selectAll("image.motion-policy-hover-cover")
+      .data([policy])
+      .join("image")
+      .attr("class", "motion-policy-hover-cover")
+      .attr("x", 5)
+      .attr("y", 5)
+      .attr("width", hoverCardWidth - 10)
+      .attr("height", hoverImageHeight)
+      .attr("preserveAspectRatio", "xMidYMid slice")
+      .attr("href", d => d.cover);
+    hoverCard.selectAll("rect.motion-policy-hover-fallback")
+      .data([policy])
+      .join("rect")
+      .attr("class", "motion-policy-hover-fallback")
+      .attr("x", 5)
+      .attr("y", 5)
+      .attr("width", hoverCardWidth - 10)
+      .attr("height", hoverImageHeight)
+      .attr("rx", 6)
+      .style("display", d => d.cover ? "none" : null);
+    const hoverName = hoverCard.selectAll("text.motion-policy-hover-name")
+      .data([policy])
+      .join("text")
+      .attr("class", "motion-policy-hover-name")
+      .attr("x", hoverCardWidth / 2)
+      .attr("y", hoverImageHeight + 21);
+    hoverName.selectAll("tspan")
+      .data(d => wrapText(d.name, 9, 2).map((line, index) => ({ line, index })))
+      .join("tspan")
+      .attr("x", hoverCardWidth / 2)
+      .attr("dy", d => d.index === 0 ? 0 : 14)
+      .text(d => d.line);
+  });
+
+  items.transition()
     .duration(240)
     .style("opacity", 1);
-  items.exit()
-    .transition()
-    .duration(160)
-    .style("opacity", 0)
-    .remove();
 }
 
 function layoutMotionPolicyTimeline(events, x, innerWidth) {
@@ -927,6 +940,17 @@ function formatMotionValue(value, metric) {
 function truncateText(value, maxLength) {
   const text = String(value || "");
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+function wrapText(value, size, maxLines) {
+  const text = String(value || "");
+  const lines = [];
+  for (let index = 0; index < text.length && lines.length < maxLines; index += size) {
+    const isLastLine = lines.length === maxLines - 1;
+    const chunk = text.slice(index, index + size);
+    lines.push(isLastLine && index + size < text.length ? `${chunk}…` : chunk);
+  }
+  return lines.length ? lines : [""];
 }
 
 function pollutionChangeBadge(policy) {
