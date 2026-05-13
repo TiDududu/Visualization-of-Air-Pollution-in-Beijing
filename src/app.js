@@ -527,8 +527,8 @@ function renderMotionFrame(animate) {
   d3.select("#motion-current-month").text(current.key);
 
   const widthValue = 980;
-  const heightValue = 580;
-  const margin = { top: 242, right: 24, bottom: 52, left: 58 };
+  const heightValue = 640;
+  const margin = { top: 302, right: 24, bottom: 52, left: 58 };
   const innerWidth = widthValue - margin.left - margin.right;
   const innerHeight = heightValue - margin.top - margin.bottom;
   let svgMotion = d3.select("#monthly-motion-chart").select("svg");
@@ -542,10 +542,10 @@ function renderMotionFrame(animate) {
     plot.append("g").attr("class", "motion-stage-bands");
     plot.append("g").attr("class", "motion-grid");
     plot.append("g").attr("class", "motion-bars");
+    plot.append("g").attr("class", "motion-annual-trend");
     plot.append("g").attr("class", "motion-policy-months");
     plot.append("g").attr("class", "motion-policy-lines");
     plot.append("g").attr("class", "motion-now");
-    plot.append("g").attr("class", "motion-cards");
     plot.append("g").attr("class", "axis motion-x-axis").attr("transform", `translate(0,${innerHeight})`);
     plot.append("g").attr("class", "axis motion-y-axis");
     plot.append("text")
@@ -588,10 +588,11 @@ function renderMotionFrame(animate) {
     .attr("class", "motion-scale-note motion-policy-note")
     .attr("x", margin.left)
     .attr("y", heightValue - 14)
-    .text("政策轴与污染柱状图统一从 2014-01 开始；下方为相较 2014-01 的污染物变化");
+    .text("政策轴与污染柱状图统一从 2014-01 开始；上方 PM2.5 注释依次显示相较 2014-01 与相较上一政策的变化");
 
   renderMotionPolicyTimeline(plot.select(".motion-policy-timeline"), x, current.date, innerWidth);
   renderMotionStageBands(plot, x, innerHeight);
+  renderMotionAnnualTrend(plot, visibleData, x, y, transition);
   renderMotionPolicyMonthMarks(plot, x, innerHeight, current.date);
 
   const gridLines = plot.select(".motion-grid")
@@ -659,7 +660,7 @@ function renderMotionFrame(animate) {
       exit => exit.call(selection => selection.transition(transition || d3.transition().duration(0)).style("opacity", 0).remove())
     );
 
-  plot.select(".motion-cards").selectAll("*").remove();
+  renderMotionPolicyDetail(currentPolicies[0] ?? latestVisiblePolicy(current.date));
 }
 
 function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
@@ -668,10 +669,7 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
     x,
     innerWidth
   );
-  const axisY = -70;
-  const hoverCardWidth = 92;
-  const hoverCardHeight = 106;
-  const hoverImageHeight = 72;
+  const axisY = -42;
   layer.selectAll(".motion-policy-timeline-base")
     .data([null])
     .join("line")
@@ -706,93 +704,96 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
       .on("mouseenter", function () {
         d3.select(this).raise();
         hideTooltip();
+        renderMotionPolicyDetail(policy);
       })
-      .on("mouseleave", hideTooltip);
+      .on("mousemove", event => {
+        showPolicyTooltip(event, `${monthKey(policy.dateObject)} 政策`, `${policy.name}<br>${truncateText(policy.summary || policy.measures, 66)}`);
+        renderMotionPolicyDetail(policy);
+      })
+      .on("mouseleave", hideTooltip)
+      .on("click", () => renderMotionPolicyDetail(policy));
 
     item.selectAll("line.motion-policy-timeline-stem")
       .data([policy])
       .join("line")
       .attr("class", "motion-policy-timeline-stem")
       .attr("x1", d => d.dotX)
-      .attr("x2", d => d.labelX)
+      .attr("x2", d => d.dotX)
       .attr("y1", axisY)
-      .attr("y2", d => d.labelY + 8);
+      .attr("y2", d => d.coverY + d.coverHeight)
+      .style("display", d => d.compactNode ? "none" : null);
 
     item.selectAll("circle.motion-policy-timeline-dot")
       .data([policy])
       .join("circle")
-      .attr("class", "motion-policy-timeline-dot")
+      .attr("class", d => `motion-policy-timeline-dot${d.compactNode ? " compact" : ""}`)
       .attr("cx", d => d.dotX)
       .attr("cy", axisY)
-      .attr("r", 5.6);
+      .attr("r", d => d.compactNode ? 3.8 : 5.6);
 
     item.selectAll("text.motion-policy-axis-year")
       .data([policy])
       .join("text")
       .attr("class", "motion-policy-axis-year")
-      .attr("x", d => d.annotationX)
-      .attr("y", d => axisY + 20 + d.annotationLane * 14)
-      .text(d => d.showYear ? d.year : "");
+      .attr("x", d => d.dotX)
+      .attr("y", axisY + 20)
+      .text(d => d.showYear && !d.compactNode ? d.year : "");
 
-    item.selectAll("text.motion-policy-axis-change")
-      .data([policy])
-      .join("text")
-      .attr("class", "motion-policy-axis-change")
-      .attr("x", d => d.annotationX)
-      .attr("y", d => axisY + 36 + d.annotationLane * 14)
-      .text(d => pollutionChangeBadge(d));
+    const cover = item.selectAll("g.motion-policy-cover")
+      .data(policy.compactNode ? [] : [policy])
+      .join("g")
+      .attr("class", "motion-policy-cover")
+      .attr("transform", d => `translate(${d.coverX},${d.coverY})`);
+    cover.selectAll("rect.motion-policy-cover-frame")
+      .data(d => [d])
+      .join("rect")
+      .attr("class", "motion-policy-cover-frame")
+      .attr("width", d => d.coverWidth)
+      .attr("height", d => d.coverHeight)
+      .attr("rx", 7);
+    cover.selectAll("image.motion-policy-cover-image")
+      .data(d => [d])
+      .join("image")
+      .attr("class", "motion-policy-cover-image")
+      .attr("x", 5)
+      .attr("y", 5)
+      .attr("width", d => d.coverWidth - 10)
+      .attr("height", d => d.coverHeight - 10)
+      .attr("preserveAspectRatio", "xMidYMid slice")
+      .attr("href", d => d.cover)
+      .on("error", function handlePolicyCoverError(_, d) {
+        d3.select(this).remove();
+        const parent = d3.select(this.parentNode);
+        parent.selectAll("rect.motion-policy-cover-fallback")
+          .data([d])
+          .join("rect")
+          .attr("class", "motion-policy-cover-fallback")
+          .attr("x", 5)
+          .attr("y", 5)
+          .attr("width", d.coverWidth - 10)
+          .attr("height", d.coverHeight - 10)
+          .attr("rx", 6);
+        parent.selectAll("text.motion-policy-cover-fallback-text")
+          .data([d])
+          .join("text")
+          .attr("class", "motion-policy-cover-fallback-text")
+          .attr("x", d.coverWidth / 2)
+          .attr("y", d.coverHeight / 2 + 4)
+          .text("暂无封面");
+      });
 
-    const label = item.selectAll("text.motion-policy-timeline-label")
+    item.selectAll("text.motion-policy-timeline-label")
       .data([policy])
       .join("text")
       .attr("class", "motion-policy-timeline-label")
       .attr("x", d => d.labelX)
       .attr("y", d => d.labelY)
-      .text(d => policyAxisLabel(d.name));
-
-    const hoverCard = item.selectAll("g.motion-policy-hover-card")
-      .data([policy])
-      .join("g")
-      .attr("class", "motion-policy-hover-card")
-      .attr("transform", d => `translate(${d.hoverX},${d.hoverY})`);
-    hoverCard.selectAll("rect.motion-policy-hover-frame")
-      .data([policy])
-      .join("rect")
-      .attr("class", "motion-policy-hover-frame")
-      .attr("rx", 7)
-      .attr("width", hoverCardWidth)
-      .attr("height", hoverCardHeight);
-    hoverCard.selectAll("image.motion-policy-hover-cover")
-      .data([policy])
-      .join("image")
-      .attr("class", "motion-policy-hover-cover")
-      .attr("x", 5)
-      .attr("y", 5)
-      .attr("width", hoverCardWidth - 10)
-      .attr("height", hoverImageHeight)
-      .attr("preserveAspectRatio", "xMidYMid slice")
-      .attr("href", d => d.cover);
-    hoverCard.selectAll("rect.motion-policy-hover-fallback")
-      .data([policy])
-      .join("rect")
-      .attr("class", "motion-policy-hover-fallback")
-      .attr("x", 5)
-      .attr("y", 5)
-      .attr("width", hoverCardWidth - 10)
-      .attr("height", hoverImageHeight)
-      .attr("rx", 6)
-      .style("display", d => d.cover ? "none" : null);
-    const hoverName = hoverCard.selectAll("text.motion-policy-hover-name")
-      .data([policy])
-      .join("text")
-      .attr("class", "motion-policy-hover-name")
-      .attr("x", hoverCardWidth / 2)
-      .attr("y", hoverImageHeight + 21);
-    hoverName.selectAll("tspan")
-      .data(d => wrapText(d.name, 9, 2).map((line, index) => ({ line, index })))
+      .text(null)
+      .selectAll("tspan")
+      .data(d => d.compactNode ? [] : wrapPolicyTimelineName(d.name).map((line, index) => ({ line, index, x: d.labelX })))
       .join("tspan")
-      .attr("x", hoverCardWidth / 2)
-      .attr("dy", d => d.index === 0 ? 0 : 14)
+      .attr("x", d => d.x)
+      .attr("dy", d => d.index === 0 ? 0 : 12)
       .text(d => d.line);
   });
 
@@ -802,13 +803,11 @@ function renderMotionPolicyTimeline(layer, x, currentDate, innerWidth) {
 }
 
 function layoutMotionPolicyTimeline(events, x, innerWidth) {
-  const labelWidth = 70;
-  const labelLaneGap = 18;
-  const annotationWidth = 48;
-  const minGap = 5;
-  const labelBaseY = -128;
-  const labelLanes = [];
-  const annotationLanes = [];
+  const labelWidth = 126;
+  const coverWidth = 100;
+  const coverHeight = 72;
+  const labelY = -148;
+  const coverY = -236;
   const seenYears = new Set();
   return events
     .map(policy => ({
@@ -817,42 +816,144 @@ function layoutMotionPolicyTimeline(events, x, innerWidth) {
     }))
     .sort((a, b) => d3.ascending(a.dotX, b.dotX) || d3.ascending(a.id, b.id))
     .map(policy => {
-      const labelPlacement = placeTimelineLabel(labelLanes, policy.dotX, labelWidth, innerWidth, minGap, 110);
-      const annotationPlacement = placeTimelineLabel(annotationLanes, policy.dotX, annotationWidth, innerWidth, minGap, 70);
+      const compactNode = isCompactAnnualAction(policy);
+      const labelX = Math.max(labelWidth / 2, Math.min(innerWidth - labelWidth / 2, policy.dotX));
 
-      const showYear = !seenYears.has(policy.year);
-      seenYears.add(policy.year);
-      const hoverX = Math.max(0, Math.min(innerWidth - 92, labelPlacement.x - 46));
-      const labelY = labelBaseY + labelPlacement.lane * labelLaneGap;
+      const showYear = !compactNode && !seenYears.has(policy.year);
+      if (!compactNode) {
+        seenYears.add(policy.year);
+      }
       return {
         ...policy,
-        labelX: labelPlacement.x,
+        compactNode,
+        labelX: compactNode ? labelX : policy.dotX,
         labelY,
-        annotationX: annotationPlacement.x,
-        annotationLane: annotationPlacement.lane,
-        showYear,
-        hoverX,
-        hoverY: -224
+        coverX: Math.max(0, Math.min(innerWidth - coverWidth, policy.dotX - coverWidth / 2)),
+        coverY,
+        coverWidth,
+        coverHeight,
+        showYear
       };
     });
 }
 
-function placeTimelineLabel(lanes, anchorX, width, innerWidth, minGap, maxShift) {
-  const preferredLeft = Math.max(0, Math.min(innerWidth - width, anchorX - width / 2));
-  const candidates = lanes
-    .map((lastRight, lane) => {
-      const left = Math.max(preferredLeft, lastRight + minGap);
-      return { lane, left, shift: Math.abs(left + width / 2 - anchorX) };
-    })
-    .filter(candidate => candidate.left <= innerWidth - width && candidate.shift <= maxShift);
-  const best = candidates.sort((a, b) => d3.ascending(a.lane, b.lane) || d3.ascending(a.shift, b.shift))[0];
-  if (best) {
-    lanes[best.lane] = best.left + width;
-    return { lane: best.lane, x: best.left + width / 2 };
+function isCompactAnnualAction(policy) {
+  return [2022, 2023, 2024, 2025, 2026].includes(policy.year) && String(policy.name || "").includes("行动计划");
+}
+
+function wrapPolicyTimelineName(name) {
+  return wrapText(String(name || "").replace(/^北京市?/, "北京市"), 9, 4);
+}
+
+function renderMotionAnnualTrend(plot, visibleData, x, y, transition) {
+  const yearlyPoints = Array.from(d3.group(visibleData, d => d.year), ([year, months]) => {
+    const validMonths = months.filter(month => Number.isFinite(month[motionMetric]));
+    if (!validMonths.length) {
+      return null;
+    }
+    const first = validMonths[0];
+    const last = validMonths[validMonths.length - 1];
+    const firstX = (x(first.key) ?? 0) + x.bandwidth() / 2;
+    const lastX = (x(last.key) ?? firstX) + x.bandwidth() / 2;
+    return {
+      year,
+      x: (firstX + lastX) / 2,
+      value: d3.mean(validMonths, month => month[motionMetric])
+    };
+  })
+    .filter(Boolean)
+    .sort((a, b) => d3.ascending(a.year, b.year));
+
+  const line = d3.line()
+    .x(d => d.x)
+    .y(d => y(d.value))
+    .curve(d3.curveMonotoneX);
+
+  plot.select(".motion-annual-trend")
+    .selectAll("path")
+    .data(yearlyPoints.length > 1 ? [yearlyPoints] : [])
+    .join("path")
+    .attr("class", "motion-annual-line-path")
+    .transition(transition || d3.transition().duration(0))
+    .attr("d", line);
+
+  plot.select(".motion-annual-trend")
+    .selectAll("circle")
+    .data(yearlyPoints, d => d.year)
+    .join(
+      enter => enter.append("circle")
+        .attr("class", "motion-annual-line-dot")
+        .attr("r", 0)
+        .attr("cx", d => d.x)
+        .attr("cy", d => y(d.value))
+        .call(selection => selection.transition(transition || d3.transition().duration(0)).attr("r", 3.4)),
+      update => update.call(selection => selection.transition(transition || d3.transition().duration(0))
+        .attr("cx", d => d.x)
+        .attr("cy", d => y(d.value))),
+      exit => exit.call(selection => selection.transition(transition || d3.transition().duration(0)).attr("r", 0).remove())
+    );
+}
+
+function latestVisiblePolicy(currentDate) {
+  return motionPolicyEvents
+    .filter(policy => policy.dateObject <= currentDate)
+    .sort((a, b) => d3.descending(a.dateObject, b.dateObject))[0] ?? null;
+}
+
+function renderMotionPolicyDetail(policy) {
+  const card = d3.select("#motion-policy-detail");
+  if (card.empty()) {
+    return;
   }
-  const lane = lanes.length;
-  lanes.push(preferredLeft + width);
-  return { lane, x: preferredLeft + width / 2 };
+  if (!policy) {
+    card.html(`
+      <span class="motion-policy-detail-kicker">政策详情</span>
+      <h4>播放到政策月份后显示详情</h4>
+      <p>主图默认只展示政策结构；政策封面、摘要和 PM2.5 对比放在这里按需展开。</p>
+    `);
+    return;
+  }
+  const month = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject));
+  const pm25 = month ? formatMotionValue(month.pm25, "pm25") : "无数据";
+  const changeLines = policyPm25ChangeLines(policy);
+  const summary = policy.summary || policy.measures || "暂无摘要";
+  card.html(`
+    <span class="motion-policy-detail-kicker">${escapeHtml(policyType(policy))}</span>
+    <h4>${escapeHtml(policy.name)}</h4>
+    <div class="motion-policy-detail-meta">
+      <span>${escapeHtml(policy.date)}</span>
+      <span>PM2.5 ${escapeHtml(pm25)}</span>
+    </div>
+    <div class="motion-policy-detail-change">
+      <strong>${escapeHtml(changeLines[0])}</strong>
+      <strong>${escapeHtml(changeLines[1])}</strong>
+    </div>
+    <img src="${escapeHtml(policy.cover)}" alt="${escapeHtml(policy.name)}政策封面">
+    <p>${escapeHtml(truncateText(summary, 120))}</p>
+  `);
+}
+
+function policyType(policy) {
+  const name = policy.name || "";
+  if (name.includes("条例")) {
+    return "法规制度";
+  }
+  if (name.includes("扬尘") || name.includes("专项")) {
+    return "专项治理";
+  }
+  if (name.includes("行动计划")) {
+    return "年度行动";
+  }
+  return "阶段政策";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderMotionStageBands(plot, x, innerHeight) {
@@ -908,7 +1009,11 @@ function renderMotionPolicyMonthMarks(plot, x, innerHeight, currentDate) {
       const xValue = (x(monthKey(d.dateObject)) ?? 0) + x.bandwidth() / 2;
       return `translate(${xValue},0)`;
     })
-    .on("mousemove", (event, d) => showPolicyTooltip(event, `${monthKey(d.dateObject)} 政策`, `${d.name}<br>${truncateText(d.summary, 58)}`))
+    .on("mousemove", (event, d) => {
+      renderMotionPolicyDetail(d);
+      showPolicyTooltip(event, `${monthKey(d.dateObject)} 政策`, `${d.name}<br>${truncateText(d.summary, 58)}`);
+    })
+    .on("click", (event, d) => renderMotionPolicyDetail(d))
     .on("mouseleave", hideTooltip)
     .transition()
     .duration(220)
@@ -957,65 +1062,38 @@ function wrapText(value, size, maxLines) {
   return lines.length ? lines : [""];
 }
 
-function pollutionChangeBadge(policy) {
-  const baseline = monthlyMotionData[0]?.[motionMetric];
-  const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
+function policyPm25ChangeLines(policy) {
+  const baseline = monthlyMotionData[0]?.pm25;
+  const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.pm25;
   if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
-    return "无数据";
+    return ["较2014 无数据", "较上策 无数据"];
   }
-  const ratio = ((baseline - current) / baseline) * 100;
-  if (Math.abs(ratio) < 0.5) {
+  const previous = previousPolicyWithMonthlyPm25(policy);
+  const baselineRatio = ((baseline - current) / baseline) * 100;
+  const previousRatio = previous ? ((previous.pm25 - current) / previous.pm25) * 100 : null;
+  return [
+    `较2014 ${formatChangePercent(baselineRatio)}`,
+    previousRatio === null ? "较上策 --" : `较上策 ${formatChangePercent(previousRatio)}`
+  ];
+}
+
+function previousPolicyWithMonthlyPm25(policy) {
+  const currentTime = policy.dateObject.getTime();
+  return motionPolicyEvents
+    .filter(item => item.dateObject.getTime() < currentTime)
+    .map(item => ({
+      ...item,
+      pm25: monthlyMotionData.find(month => month.key === monthKey(item.dateObject))?.pm25
+    }))
+    .filter(item => Number.isFinite(item.pm25))
+    .sort((a, b) => d3.descending(a.dateObject, b.dateObject))[0] ?? null;
+}
+
+function formatChangePercent(value) {
+  if (Math.abs(value) < 0.5) {
     return "持平";
   }
-  return `${motionMetricConfig[motionMetric].label}${ratio >= 0 ? "↓" : "↑"}${d3.format(".0f")(Math.abs(ratio))}%`;
-}
-
-function pollutionChangeText(policy) {
-  const baseline = monthlyMotionData[0]?.[motionMetric];
-  const current = monthlyMotionData.find(d => d.key === monthKey(policy.dateObject))?.[motionMetric];
-  const label = motionMetricConfig[motionMetric].label;
-  if (!baseline || current === null || current === undefined || Number.isNaN(current)) {
-    return `${label}: 缺少可比月度数据`;
-  }
-  const ratio = ((baseline - current) / baseline) * 100;
-  const direction = ratio >= 0 ? "下降" : "上升";
-  return `${label}: ${formatMotionValue(current, motionMetric)}，较 2014-01 ${direction} ${d3.format(".1f")(Math.abs(ratio))}%`;
-}
-
-function wrapPolicyAxisName(name) {
-  const compact = String(name || "")
-    .replace(/^北京市?/, "")
-    .replace(/^推进美丽北京建设\s*/, "")
-    .replace(/^持续深入打好污染防治攻坚战\s*/, "")
-    .replace(/^深入打好污染防治攻坚战\s*/, "")
-    .replace(/（.*?）/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return wrapText(compact, 8, 2);
-}
-
-function policyAxisLabel(name) {
-  const text = String(name || "");
-  const aliases = [
-    ["第十六阶段控制大气污染措施", "十六阶段"],
-    ["2011-2015", "清洁空气"],
-    ["压减燃煤", "压减燃煤"],
-    ["2012—2020年大气污染治理措施", "大气治理"],
-    ["工业大气污染治理", "工业治理"],
-    ["2013-2017", "清洁空气"],
-    ["京津冀及周边地区", "京津冀细则"],
-    ["大气污染防治条例", "防治条例"],
-    ["蓝天保卫战", "蓝天保卫战"],
-    ["十四五", "十四五规划"],
-    ["2022 年行动计划", "2022行动"],
-    ["2023 年行动计划", "2023行动"],
-    ["2024 年行动计划", "2024行动"],
-    ["2025 年行动计划", "2025行动"],
-    ["2026年行动计划", "2026行动"],
-    ["扬尘专项治理", "扬尘攻坚"]
-  ];
-  const alias = aliases.find(([pattern]) => text.includes(pattern));
-  return alias ? alias[1] : truncateText(text.replace(/^北京市?/, ""), 6);
+  return `${value >= 0 ? "↓" : "↑"}${d3.format(".0f")(Math.abs(value))}%`;
 }
 
 function createChart(selector, widthValue, heightValue) {

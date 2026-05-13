@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>北京空气质量改善与政策影响</title>
-    <link rel="stylesheet" href="src/styles.css?v=policy-axis-2014-v7">
+    <link rel="stylesheet" href="src/styles.css?v=policy-structure-v10">
   </head>
   <body>
     <main class="app-shell">
@@ -34,7 +34,7 @@
         <article class="chart-panel monthly-motion-panel">
           <div class="chart-heading">
             <h3>逐月推进：污染变化与政策发布</h3>
-            <p>点击播放后，柱状图按月份显现；政策发布月份会出现政策卡。</p>
+            <p>点击播放后，柱状图按月份显现；上方只保留政策结构，悬停节点查看政策详情。</p>
           </div>
           <div class="motion-controls">
             <button id="motion-play-button" class="play-button" type="button">播放</button>
@@ -50,7 +50,10 @@
             <strong id="motion-current-month">2014-01</strong>
             <input id="motion-slider" type="range" min="0" value="0" step="1" aria-label="选择月份">
           </div>
-          <div id="monthly-motion-chart" class="chart motion-chart"></div>
+          <div class="monthly-motion-body">
+            <div id="monthly-motion-chart" class="chart motion-chart"></div>
+            <aside id="motion-policy-detail" class="motion-policy-detail-card" aria-live="polite"></aside>
+          </div>
         </article>
 
         <div class="chart-grid">
@@ -129,7 +132,7 @@
 
     <div id="tooltip" class="tooltip" role="status"></div>
     <script src="src/d3.v7.min.js"></script>
-    <script src="src/policy-impact-summary-data.js?v=policy-axis-2014-v7"></script>
-    <script src="src/app.js?v=policy-axis-2014-v7"></script>
+    <script src="src/policy-impact-summary-data.js?v=policy-structure-v10"></script>
+    <script src="src/app.js?v=policy-structure-v10"></script>
   </body>
 </html>
