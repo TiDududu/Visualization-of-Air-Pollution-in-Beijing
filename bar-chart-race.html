@@ -427,6 +427,66 @@
       line-height: 1.1;
     }
 
+    .tooltip .interp-tag {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 5px;
+      font-size: 9.5px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+      vertical-align: 2px;
+    }
+
+    /* Counterfactual info popup — wider, multi-paragraph explanation.
+       Pointer-events auto so user can move cursor onto the popup to read. */
+    .info-tooltip {
+      min-width: 300px;
+      max-width: 340px;
+      transform: translate(-50%, calc(-100% - 16px));
+      pointer-events: auto;
+    }
+
+    .info-tooltip::after {
+      bottom: -5px;
+    }
+
+    .info-tooltip .info-title {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      letter-spacing: 0.01em;
+    }
+
+    .info-tooltip .info-body {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 6px 0;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .info-tooltip .info-body b {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .info-tooltip .info-formula {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin: 8px 0;
+      color: rgba(255, 255, 255, 0.92);
+      letter-spacing: 0.02em;
+    }
+
     .tooltip .name .swatch {
       display: inline-block;
       width: 9px;
@@ -501,6 +561,297 @@
         flex-wrap: wrap;
       }
     }
+
+    /* ===========================================================
+       DID section  —  Beijing vs Delhi PM2.5 line chart
+       =========================================================== */
+    .did-section {
+      margin-top: 80px;
+      padding-top: 36px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .did-section h2 {
+      font-family: "Noto Sans SC", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: clamp(34px, 4.8vw, 54px);
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+      margin: 0 0 8px;
+      text-align: center;
+    }
+
+    .did-section h2 em {
+      font-style: normal;
+      color: var(--pm25);
+    }
+
+    .did-section .subtitle {
+      max-width: 720px;
+    }
+
+    .did-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0 8px;
+    }
+
+    .did-controls .btn-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 8px 14px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+    }
+
+    .mode-btn:hover {
+      border-color: var(--ink-soft);
+      color: var(--ink);
+    }
+
+    .mode-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .mode-btn[data-poll].active {
+      background: var(--btn-color, var(--ink));
+      border-color: var(--btn-color, var(--ink));
+    }
+
+    .line-treat {
+      fill: none;
+      stroke-width: 4.6px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Wider transparent line painted behind Beijing — produces a soft glow
+       without needing an SVG filter (filters can color-shift on some
+       browsers and don't anti-alias well). */
+    .line-treat-glow {
+      fill: none;
+      stroke-width: 14px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.13;
+    }
+
+    /* Right-edge label leader line — from data point to displaced label */
+    .leader-line {
+      fill: none;
+      stroke-width: 0.8px;
+      opacity: 0.35;
+    }
+
+    /* "Beijing 2013 starting line" reference — makes the magnitude of the
+       drop legible by anchoring the original level visually. */
+    .bj-anchor-rule {
+      stroke: var(--pm25);
+      stroke-width: 1px;
+      stroke-dasharray: 3 6;
+      opacity: 0.32;
+    }
+
+    .bj-anchor-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10.5px;
+      fill: var(--pm25);
+      opacity: 0.75;
+      letter-spacing: 0.04em;
+    }
+
+    /* Peer city lines — color is set per-line via JS .style() so CSS does
+       NOT set stroke here.  CSS would otherwise win against attr(). */
+    .line-peer {
+      fill: none;
+      stroke-width: 2.4px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 6 5;
+      opacity: 0.92;
+    }
+
+    /* Treatment-effect wedge — between Beijing actual and Beijing
+       counterfactual.  Stronger opacity since this is now the ONLY shaded
+       area and the headline DiD claim. */
+    .gap-area {
+      opacity: 0.18;
+    }
+
+    /* Counterfactual Beijing — "what BJ would have been if it tracked peers".
+       Slightly thicker + less transparent than the original so the line
+       stays legible when it visually coincides with a peer trajectory
+       (this happens for NO₂, where BJ 2013 ≈ Delhi 2013 ≈ 55 µg/m³). */
+    .line-cf {
+      fill: none;
+      stroke-width: 2.4px;
+      stroke-dasharray: 3 4;
+      opacity: 0.78;
+    }
+
+
+    .endpoint-dot {
+      stroke: #fff;
+      stroke-width: 2px;
+    }
+
+    .endpoint-halo {
+      fill: none;
+      stroke-width: 2px;
+      opacity: 0.35;
+    }
+
+    /* Right-edge labels: single line with two tspans (name + value).
+       Single line is ≈16px tall so a minGap of 22 actually prevents
+       collision between adjacent labels. */
+    .end-label-text {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+    }
+
+    .lbl-name {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .lbl-value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+
+    /* Counterfactual label needs hover affordance + italic to set it
+       apart from the actual-data city labels. */
+    .end-label.is-cf .lbl-name {
+      font-style: italic;
+    }
+
+    .end-label.is-cf {
+      cursor: help;
+    }
+
+    /* Beijing 2013 anchor — placed mid-chart with white chip background */
+    .bj-anchor-chip {
+      fill: var(--bg-2);
+      stroke: rgba(196, 69, 54, 0.35);
+      stroke-width: 1px;
+      rx: 4;
+    }
+
+    .year-dot {
+      stroke: #fff;
+      stroke-width: 1.2px;
+    }
+
+    .hover-rule {
+      stroke: var(--ink);
+      stroke-width: 1px;
+      stroke-dasharray: 2 3;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .hover-dot {
+      stroke: #fff;
+      stroke-width: 2px;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .baseline-rule {
+      stroke: var(--ink-soft);
+      stroke-width: 1px;
+      stroke-dasharray: 4 4;
+      opacity: 0.3;
+    }
+
+    .baseline-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      fill: var(--ink-soft);
+      letter-spacing: 0.06em;
+    }
+
+    /* ---------- DID stat banner ---------- */
+    .did-stats {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0 12px;
+    }
+
+    .stat-card {
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card.stat-hero {
+      border-color: rgba(196, 69, 54, 0.25);
+      background: linear-gradient(180deg, rgba(196, 69, 54, 0.045) 0%, var(--bg-2) 70%);
+    }
+
+    .stat-label {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+      font-weight: 700;
+      font-size: 42px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-top: 4px;
+      color: var(--ink);
+    }
+
+    .stat-card.stat-hero .stat-value {
+      color: var(--pm25);
+      font-size: 52px;
+    }
+
+    .stat-sub {
+      font-family: "Noto Sans SC", "IBM Plex Sans", sans-serif;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .stat-card.stat-hero .stat-sub b {
+      color: var(--pm25);
+      font-weight: 600;
+    }
+
+    @media (max-width: 720px) {
+      .did-stats { grid-template-columns: 1fr; }
+      .stat-card.stat-hero .stat-value { font-size: 42px; }
+    }
   </style>
 </head>
 
@@ -515,8 +866,8 @@
     <div class="title-block">
       <h1>北京雾霾</h1>
       <p class="subtitle">
-        年度均值竞速：四种主要污染物（PM<sub>2.5</sub>、PM<sub>10</sub>、SO₂、NO₂）<br>
-        在 2013–2026 这十四年中的排名与浓度变化。
+        2013–2026 年间，四种主要污染物（PM<sub>2.5</sub>、PM<sub>10</sub>、SO₂、NO₂）<br>
+        年均浓度的位次与水平变化。
       </p>
     </div>
 
@@ -547,22 +898,120 @@
       <div>
         <h3>方法</h3>
         <p>
-          前端动态解析 CSV，将 US-AQI 转换为实际浓度并计算年均值。动画由 <code>requestAnimationFrame</code> 驱动，
-          对相邻年份数据进行线性插值，实现排名的平滑交错与条长的自适应过渡。
+          前端解析 CSV，将 US-AQI 反算为浓度后聚合为年均值；动画基于 <code>requestAnimationFrame</code>，
+          对相邻年份做线性插值以平滑位次切换与条长过渡。
         </p>
       </div>
       <div>
         <h3>说明</h3>
         <p>
-          自动完成 AQI 至 µg/m³ 浓度的转换。因 2013 年原始数据不全，
-          该年起点采用了真实的年均浓度历史记录作为计算基准。
+          AQI 至 µg/m³ 的换算依 EPA 断点。2013 年原始数据不完整，该年起点采用同期文献年均值作为基准。
         </p>
       </div>
+    </section>
+
+    <!-- ====================================================================
+         SECOND CHART  —  Diff-in-Diff: Beijing vs Delhi PM2.5
+         ==================================================================== -->
+    <section class="did-section">
+      <div class="title-block">
+        <h2>差分识别：政策的<em>因果效应</em>估计</h2>
+        <p class="subtitle">
+          处理组取北京，对照组取新德里、拉合尔、达卡、河内，时间窗口 2013–2025 年，指标为 PM<sub>2.5</sub> 年均浓度。<br>
+          五城基线差异较大，故不作起点对齐。图中红色虚线为「反事实北京」，即按对照群同期变化率外推的北京路径；
+          其与实测曲线之间的楔形面积，作为系统性治理处理效应的点估计。
+        </p>
+      </div>
+
+      <div class="deck">
+        <span><span class="dot" id="deckTreatDot" style="background:var(--pm25)"></span>北京 · 处理组</span>
+        <span><span class="dot" style="background:#3f3f46"></span>新德里 · 对照组</span>
+      </div>
+
+      <div class="did-controls">
+        <div class="btn-row" id="pollRow">
+          <button class="mode-btn active" data-poll="pm25" style="--btn-color:#c44536">PM₂.₅</button>
+          <button class="mode-btn" data-poll="pm10" style="--btn-color:#e09f3e">PM₁₀</button>
+          <button class="mode-btn" data-poll="no2"  style="--btn-color:#5c8a4e">NO₂</button>
+          <button class="mode-btn" data-poll="so2"  style="--btn-color:#2e5c8a">SO₂</button>
+        </div>
+        <div class="btn-row" id="modeRow">
+          <button class="mode-btn active" data-mode="absolute">绝对浓度 · µg/m³</button>
+          <button class="mode-btn" data-mode="indexed">指数化 · 2013 = 100（仅供轨迹对比）</button>
+        </div>
+      </div>
+
+      <div class="did-stats" id="didStats">
+        <div class="stat-card stat-hero">
+          <div class="stat-label">北京 · 累计降幅</div>
+          <div class="stat-value" id="statBjVal">—</div>
+          <div class="stat-sub" id="statBjSub">2013 → 2025</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">对照组 · 同期均值</div>
+          <div class="stat-value" id="statPeerVal">—</div>
+          <div class="stat-sub" id="statPeerSub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">DiD · 处理效应</div>
+          <div class="stat-value" id="statDidVal">—</div>
+          <div class="stat-sub" id="statDidSub">北京 − 对照均值</div>
+        </div>
+      </div>
+
+      <div class="chart-frame">
+        <svg class="chart did-chart" viewBox="0 0 1100 520" preserveAspectRatio="xMidYMid meet" role="img"
+          aria-label="Beijing vs peer cities pollutant diff-in-diff line chart"></svg>
+      </div>
+
+      <section class="footer-notes">
+        <div>
+          <h3>识别策略</h3>
+          <p>
+            五城 2013 年 PM<sub>2.5</sub> 基线差异显著（北京 89.5、新德里 153、拉合尔 63、达卡 80、河内 45 µg/m³），
+            不宜作起点对齐。其间仅北京启动了「大气十条」「蓝天保卫战」等系统性治理。
+            <b>反事实北京</b>以北京 2013 年浓度为基准、按对照群均值的逐年变化率外推得到；
+            实测曲线与反事实之间的楔形面积，即差分识别（DiD）下的处理效应点估计。该识别成立的前提是
+            对照城市与北京经历近似的外部冲击（气象、季风、全球能源价格等），即平行趋势假设。
+            切换污染物字段可比较 PM<sub>2.5</sub>、PM<sub>10</sub>、NO<sub>2</sub>、SO<sub>2</sub> 四组结果；
+            其中 PM<sub>10</sub>／NO<sub>2</sub>／SO<sub>2</sub> 因数据可得性所限，对照组仅保留新德里。
+          </p>
+        </div>
+        <div>
+          <h3>数据与局限</h3>
+          <p>
+            北京数据来自 AQICN（<code>beijing-air-quality.csv</code>），由 US-AQI 反算为浓度。
+            新德里 2015–2019 年取自 CPCB 全市日均（<code>delhi-city_day.csv</code>），
+            2020–2025 年取自 CPCB 站点小时均（<code>delhi_ncr_aqi_dataset.csv</code>），2013–2014 年采用文献年均值。
+            拉合尔、达卡、河内 2013–2023 年取自 V5GL05.02 卫星-地面融合 PM<sub>2.5</sub> 格网
+            （van&nbsp;Donkelaar 等，圣路易斯华盛顿大学），按城市中心 5&times;5 网格（约 25&nbsp;km）取均值；
+            2024–2025 年沿 2023 平移补足。OpenAQ 拉合尔数据仅覆盖 2024 年 1 月单站观测（13 日），
+            存在显著冬季偏倚，未纳入年均估计。三类数据源在绝对量纲上不严格可比，故指数化视图仅供轨迹趋势对比。
+          </p>
+        </div>
+      </section>
     </section>
 
   </div>
 
   <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+
+  <div class="tooltip info-tooltip" id="cfInfoTooltip" role="tooltip">
+    <div class="info-title">反事实北京 · Counterfactual Beijing</div>
+    <div class="info-body">
+      反事实北京假设：北京自 2013 年起未启动系统性大气治理（如「大气十条」「蓝天保卫战」），
+      其 <span id="cfPollName">PM₂.₅</span> 沿对照群（<span id="cfPeerNames">新德里、拉合尔、达卡、河内</span>）的同期变化率演化。
+    </div>
+    <div class="info-formula">
+      CF<sub>year</sub> = BJ<sub>2013</sub> × (mean<sub>peers,year</sub> / mean<sub>peers,2013</sub>)
+    </div>
+    <div class="info-body">
+      <b>用途：</b>实测北京曲线与反事实曲线之间的纵向差，作为差分识别（DiD）下处理效应的点估计。<br>
+      <b>前提：</b>对照城市需与北京经历近似的外部冲击（气象、季风、全球能源价格等），即平行趋势假设。<br>
+      <b>注：</b>若对照群仅含一座城市且其 2013 基线与北京相近（如 NO<sub>2</sub>：北京 56、新德里 55 µg/m³），反事实曲线将近乎贴合对照线——此为公式 CF = BJ<sub>2013</sub> × 对照变化率 的必然结果，非作图差错。<br>
+      <b>数据：</b>详见图下方「数据与局限」（AQICN ／ CPCB 实测 ／ V5GL05.02 卫星-地面融合格网）。
+    </div>
+  </div>
 
   <script src="data-processor.js"></script>
   <script>
@@ -678,8 +1127,19 @@
       const lo = Math.floor(t);
       const hi = Math.min(YEAR_MAX, lo + 1);
       const frac = t - lo;
-      const dLo = DATA_BY_YEAR.get(lo);
-      const dHi = DATA_BY_YEAR.get(hi);
+
+      let dLo = DATA_BY_YEAR.get(lo);
+      let dHi = DATA_BY_YEAR.get(hi);
+
+      if (!dLo) {
+        const availableYears = Array.from(DATA_BY_YEAR.keys());
+        const maxYear = Math.max(...availableYears);
+        dLo = DATA_BY_YEAR.get(maxYear);
+      }
+
+      if (!dHi) {
+        dHi = dLo;
+      }
 
       return POLLUTANTS.map(p => ({
         ...p,
@@ -807,8 +1267,8 @@
 
       groups.exit().remove(); // (won't trigger – the 4 keys are stable)
 
-      // year display (integer for prominence; readout shows finer)
-      yearText.text(Math.round(t));
+      // year display — clamp to 2025 so "2026" never appears
+      yearText.text(Math.min(2025, Math.floor(t)));
     }
 
     /* light-weight text width measurer for label positioning */
@@ -888,7 +1348,12 @@
       scrubber.value = currentTime.toFixed(2);
       const prog = ((currentTime - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
       scrubber.style.setProperty("--prog", prog + "%");
-      readout.textContent = currentTime.toFixed(1);
+
+      let y = Math.floor(currentTime);
+      let m = Math.floor((currentTime - y) * 12) + 1;
+      // Clamp to 2025.12 so "2026" never appears on screen
+      if (y >= 2026) { y = 2025; m = 12; }
+      readout.textContent = `${y}.${m.toString().padStart(2, '0')}`;
     }
 
     scrubber.addEventListener("input", (e) => {
@@ -909,7 +1374,7 @@
         const span = document.createElement("span");
         const pct = ((y - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
         span.style.left = pct + "%";
-        span.textContent = (y % 2 === 1 || y === YEAR_MIN || y === YEAR_MAX) ? y : "·";
+        span.textContent = y;
         ticksDiv.appendChild(span);
       }
     })();
@@ -924,9 +1389,13 @@
       // when hovering, show the underlying interpolated value at the cursor's CURRENT time
       const v = getInterpolatedValues(yr).find(x => x.key === d.key).value;
 
+      let dispYear = Math.floor(yr);
+      let dispMonth = Math.floor((yr - dispYear) * 12) + 1;
+      const displayTime = `${dispYear}.${dispMonth.toString().padStart(2, '0')}`;
+
       tooltipEl.innerHTML = `
     <div class="name"><span class="swatch" style="background:${d.color}"></span>${d.display}</div>
-    <div class="row"><span class="k">年份</span><span class="v">${yr.toFixed(1)}</span></div>
+    <div class="row"><span class="k">时间</span><span class="v">${displayTime}</span></div>
     <div class="row"><span class="k">浓度</span><span class="v">${v.toFixed(1)} µg/m³</span></div>
     <div class="row"><span class="k">排名</span><span class="v">#${d.rank + 1} / ${N}</span></div>
   `;
@@ -965,10 +1434,724 @@
 
       // Start animation loop
       requestAnimationFrame(tick);
+
+      // Build the diff-in-diff chart once Beijing data is ready
+      buildDiDChart(data);
     }).catch(err => {
       console.error("Failed to load or process data:", err);
       alert("Failed to load data. See console for details.");
     });
+
+    /* ===========================================================
+       DIFF-IN-DIFF CHART  —  Beijing vs Delhi  2013–2025
+       Selectable pollutants: PM2.5 / PM10 / NO2 / SO2
+       =========================================================== */
+
+    // Delhi annual means (µg/m³):
+    //   2013–2014  — peer-reviewed literature (Guttikunda et al. / CPCB legacy)
+    //   2015–2019  — CPCB delhi-city_day.csv daily means
+    //   2020–2025  — CPCB delhi_ncr_aqi_dataset.csv hourly means;
+    //                NO2/SO2 rescaled to 2019 city_day overlap to remove
+    //                cross-dataset methodology offset (different station mix).
+    const DELHI = [
+      { year: 2013, pm25: 153.0, pm10: 287.0, no2: 55.0, so2:  7.0 },
+      { year: 2014, pm25: 149.0, pm10: 273.0, no2: 58.0, so2:  8.0 },
+      { year: 2015, pm25: 117.3, pm10: 230.0, no2: 50.4, so2: 12.6 },
+      { year: 2016, pm25: 138.5, pm10: 258.3, no2: 63.5, so2: 18.8 },
+      { year: 2017, pm25: 125.1, pm10: 264.4, no2: 57.7, so2: 23.8 },
+      { year: 2018, pm25: 115.0, pm10: 240.1, no2: 45.9, so2: 13.6 },
+      { year: 2019, pm25: 108.5, pm10: 215.0, no2: 45.2, so2: 14.0 },
+      { year: 2020, pm25: 119.3, pm10: 254.0, no2: 45.2, so2: 14.0 },
+      { year: 2021, pm25: 118.0, pm10: 249.1, no2: 44.4, so2: 13.8 },
+      { year: 2022, pm25: 118.3, pm10: 251.1, no2: 44.8, so2: 13.9 },
+      { year: 2023, pm25: 116.6, pm10: 244.2, no2: 43.4, so2: 13.4 },
+      { year: 2024, pm25: 115.8, pm10: 242.0, no2: 43.0, so2: 13.3 },
+      { year: 2025, pm25: 115.0, pm10: 239.5, no2: 42.7, so2: 13.2 }
+    ];
+
+    // PM2.5 satellite-derived hybrid annual means (V5GL05.02, 0.05° grid,
+    // van Donkelaar et al., Washington Univ. St. Louis) extracted by 5×5 cell
+    // (~25km) mean around each city center.  2024–2025 flat-extrapolated from
+    // 2023 (OpenAQ Q1-2024 covers only Lahore and is winter-only ≈ 204 µg/m³,
+    // so cannot be used as an annual mean).
+    const PEER_PM25 = {
+      lahore: { 2013: 63.1, 2014: 65.1, 2015: 67.3, 2016: 71.3, 2017: 70.7,
+                2018: 77.7, 2019: 68.5, 2020: 66.4, 2021: 79.0, 2022: 76.2,
+                2023: 76.2, 2024: 76.2, 2025: 76.2 },
+      dhaka:  { 2013: 80.3, 2014: 84.3, 2015: 80.6, 2016: 77.4, 2017: 75.9,
+                2018: 96.6, 2019: 82.9, 2020: 87.0, 2021: 88.0, 2022: 78.2,
+                2023: 85.0, 2024: 85.0, 2025: 85.0 },
+      hanoi:  { 2013: 44.7, 2014: 47.6, 2015: 39.8, 2016: 43.0, 2017: 43.7,
+                2018: 41.5, 2019: 43.7, 2020: 40.1, 2021: 38.4, 2022: 37.8,
+                2023: 41.9, 2024: 41.9, 2025: 41.9 }
+    };
+
+    // Peer cities ordered for stable legend / hover rendering.
+    // Saturated but harmonized hues — each city legible against red Beijing.
+    const PEERS = [
+      { key: "delhi",  name: "新德里", color: "#6b6b73" },
+      { key: "lahore", name: "拉合尔", color: "#c1763f" },
+      { key: "dhaka",  name: "达卡",   color: "#3f8a5c" },
+      { key: "hanoi",  name: "河内",   color: "#7e5fa3" }
+    ];
+
+    const POLL_META = {
+      pm25: { label: "PM₂.₅", color: "#c44536" },
+      pm10: { label: "PM₁₀", color: "#e09f3e" },
+      no2:  { label: "NO₂",  color: "#5c8a4e" },
+      so2:  { label: "SO₂",  color: "#2e5c8a" }
+    };
+
+    function buildDiDChart(beijingData) {
+      const DID_YEAR_MIN = 2013, DID_YEAR_MAX = 2025;
+      const beijingByYear = new Map(beijingData.map(d => [d.year, d]));
+
+      function activePeers(pollKey) {
+        // Only PM2.5 has the three satellite-derived peer cities;
+        // for PM10 / NO2 / SO2 we only have Delhi as a control.
+        return pollKey === "pm25" ? PEERS : PEERS.filter(p => p.key === "delhi");
+      }
+
+      function buildSeries(pollKey) {
+        const peers = activePeers(pollKey);
+        return DELHI
+          .filter(d => d.year <= DID_YEAR_MAX)
+          .map(d => {
+            const row = {
+              year: d.year,
+              beijing: beijingByYear.get(d.year)?.[pollKey] ?? null
+            };
+            peers.forEach(p => {
+              if (p.key === "delhi") {
+                row[p.key] = d[pollKey];
+              } else if (pollKey === "pm25") {
+                row[p.key] = PEER_PM25[p.key][d.year] ?? null;
+              }
+            });
+            return row;
+          })
+          .filter(d => d.beijing != null && d.beijing > 0);
+      }
+
+      const svg = d3.select("svg.did-chart");
+      const VB_W = 1100, VB_H = 520;
+      const M = { top: 56, right: 160, bottom: 60, left: 70 };
+      const W = VB_W - M.left - M.right;
+      const H = VB_H - M.top - M.bottom;
+
+      // defs — gradients per pollutant for Beijing's area fill
+      const defs = svg.append("defs");
+      Object.entries(POLL_META).forEach(([key, m]) => {
+        const g = defs.append("linearGradient")
+          .attr("id", `grad-treat-${key}`)
+          .attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 1);
+        g.append("stop").attr("offset", "0%").attr("stop-color", m.color).attr("stop-opacity", 0.32);
+        g.append("stop").attr("offset", "100%").attr("stop-color", m.color).attr("stop-opacity", 0);
+      });
+
+      svg.append("text")
+        .attr("x", M.left).attr("y", 24)
+        .attr("class", "axis-title").attr("id", "didYAxisTitle")
+        .text("PM₂.₅ 指数（2013 = 100）");
+
+      const root = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
+
+      const xScale = d3.scaleLinear().domain([DID_YEAR_MIN, DID_YEAR_MAX]).range([0, W]);
+      const yScale = d3.scaleLinear().range([H, 0]);
+
+      const gGrid = root.append("g").attr("class", "grid");
+      const gBaseline = root.append("g");
+      const gXAxis = root.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${H})`);
+      const gYAxis = root.append("g").attr("class", "axis y-axis");
+
+      gXAxis.call(
+        d3.axisBottom(xScale)
+          .tickValues(d3.range(DID_YEAR_MIN, DID_YEAR_MAX + 1))
+          .tickFormat(d3.format("d"))
+          .tickSize(0).tickPadding(10)
+      );
+      gXAxis.select(".domain").attr("stroke", "var(--rule)");
+
+      root.append("text")
+        .attr("class", "axis-title")
+        .attr("x", W).attr("y", H + 44)
+        .attr("text-anchor", "end")
+        .text("年份  →");
+
+      // baseline rule (indexed mode only) — label on LEFT to avoid endpoint labels
+      const baselineRule = gBaseline.append("line").attr("class", "baseline-rule")
+        .attr("x1", 0).attr("x2", W);
+      const baselineLabel = gBaseline.append("text").attr("class", "baseline-label")
+        .attr("x", 6).attr("text-anchor", "start").text("基线 100");
+
+      // layers (bottom → top):
+      //   bjAnchorRule  — dashed horizontal at Beijing's own 2013 level
+      //   gapPath       — wedge between BJ actual & counterfactual (DiD)
+      //   gPeerLines    — dashed peer-city lines
+      //   cfPath        — Beijing counterfactual line (dashed red)
+      //   treatGlowPath — wide low-opacity halo behind Beijing's line
+      //   treatPath     — Beijing actual line (thick, colored)
+      // Policy markers and the decorative under-Beijing gradient were
+      // intentionally removed.
+      const bjAnchorRule = root.append("line").attr("class", "bj-anchor-rule")
+        .attr("x1", 0).attr("x2", W);
+      // Mid-chart chip-backed label so the annotation doesn't crash into
+      // Beijing's early-year line (it did at the left edge).
+      const bjAnchorChip  = root.append("rect").attr("class", "bj-anchor-chip");
+      const bjAnchorLabel = root.append("text").attr("class", "bj-anchor-label")
+        .attr("text-anchor", "middle");
+      const gapPath        = root.append("path").attr("class", "gap-area");
+      const gPeerLines     = root.append("g").attr("class", "peer-lines");
+      const gPeerDots      = root.append("g").attr("class", "peer-dots");
+      const cfPath         = root.append("path").attr("class", "line-cf");
+      const treatGlowPath  = root.append("path").attr("class", "line-treat-glow");
+      const treatPath      = root.append("path").attr("class", "line-treat");
+      const gTreatDots     = root.append("g").attr("class", "dots-treat");
+
+      // Unified end-label group — all right-edge labels routed through a
+      // collision-avoidance layout pass so they can't stack.
+      const gEndLabels = root.append("g").attr("class", "end-labels");
+
+      // Endpoint anchor dots (drawn ON the chart at exact data positions —
+      // text labels are handled by the unified gEndLabels collision system).
+      const endpoints = root.append("g").attr("class", "endpoints");
+      const beijingHalo = endpoints.append("circle").attr("class", "endpoint-halo").attr("r", 12);
+      const beijingEnd  = endpoints.append("circle").attr("class", "endpoint-dot").attr("r", 6);
+      const gPeerEnds = root.append("g").attr("class", "peer-ends");
+
+      // hover
+      const hoverRule = root.append("line").attr("class", "hover-rule").attr("y1", 0).attr("y2", H);
+      const hoverTreatDot = root.append("circle").attr("class", "hover-dot").attr("r", 6);
+      const gHoverPeerDots = root.append("g").attr("class", "hover-peer-dots");
+
+      const overlay = root.append("rect")
+        .attr("width", W).attr("height", H)
+        .attr("fill", "transparent")
+        .style("cursor", "crosshair");
+
+      const tooltipEl = document.getElementById("tooltip");
+      // CF info popup — set up once, closures own the hide-timer.
+      const cfInfoEl = document.getElementById("cfInfoTooltip");
+      let cfHideTimer = null;
+      if (cfInfoEl) {
+        cfInfoEl.addEventListener("mouseenter", () => {
+          if (cfHideTimer) { clearTimeout(cfHideTimer); cfHideTimer = null; }
+        });
+        cfInfoEl.addEventListener("mouseleave", () => {
+          cfInfoEl.classList.remove("is-visible");
+        });
+      }
+
+      const lineGen = d3.line().x(d => xScale(d.year)).curve(d3.curveMonotoneX);
+      const areaGen = d3.area().x(d => xScale(d.year)).curve(d3.curveMonotoneX);
+
+      let mode = "absolute";   // start with raw concentrations — most honest
+      let pollKey = "pm25";
+      let series = buildSeries(pollKey);
+
+      function valueFor(d, who) {
+        const base0 = series[0][who];
+        const v = d[who];
+        if (v == null) return null;
+        return mode === "indexed" ? (v / base0) * 100 : v;
+      }
+
+      // mean of peer values at a given series row (only over peers with data)
+      function peerMeanVal(d, peers) {
+        const vals = peers.map(p => valueFor(d, p.key)).filter(v => v != null);
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      }
+
+      // Beijing counterfactual = "what BJ would have been if it tracked peers".
+      // Anchored at Beijing's own 2013 baseline and scaled by the peer-mean
+      // ratio at each year.  In indexed mode this equals peer-mean (both
+      // start at 100); in absolute mode it produces a Beijing-scaled curve.
+      function counterfactualVal(d, peers) {
+        const pm = peerMeanVal(d, peers);
+        if (pm == null) return null;
+        if (mode === "indexed") return pm;
+        const pm0 = peerMeanVal(series[0], peers);
+        const bj0 = series[0].beijing;
+        return bj0 * (pm / pm0);
+      }
+
+      function fmtPct(v) {
+        const change = v - 100;
+        const sign = change > 0 ? "+" : (change < 0 ? "−" : "±");
+        return `${sign}${Math.abs(change).toFixed(0)}%`;
+      }
+
+      // Greedy label-stacker: sort by natural Y, push items apart so no two
+      // are closer than minGap, then back-correct if the bottom falls off
+      // the chart. Each item's final position is written to item.y.
+      function layoutLabels(items, minGap, yMin, yMax) {
+        items.sort((a, b) => a.naturalY - b.naturalY);
+        items.forEach(it => { it.y = it.naturalY; });
+        // forward pass
+        for (let i = 1; i < items.length; i++) {
+          if (items[i].y - items[i - 1].y < minGap) {
+            items[i].y = items[i - 1].y + minGap;
+          }
+        }
+        // clip to bottom and propagate upward
+        if (items.length && items[items.length - 1].y > yMax) {
+          items[items.length - 1].y = yMax;
+          for (let i = items.length - 2; i >= 0; i--) {
+            if (items[i + 1].y - items[i].y < minGap) {
+              items[i].y = items[i + 1].y - minGap;
+            }
+          }
+        }
+        // clip top
+        if (items.length && items[0].y < yMin) {
+          items[0].y = yMin;
+          for (let i = 1; i < items.length; i++) {
+            if (items[i].y - items[i - 1].y < minGap) {
+              items[i].y = items[i - 1].y + minGap;
+            }
+          }
+        }
+        return items;
+      }
+
+      function updateDeck(peers, color, pollLabel) {
+        const deck = document.querySelector(".did-section .deck");
+        let html = `<span><span class="dot" style="background:${color}"></span>北京 · 处理组</span>`;
+        peers.forEach(p => {
+          html += `<span><span class="dot" style="background:${p.color}"></span>${p.name}</span>`;
+        });
+        deck.innerHTML = html;
+
+        // also update the CF info popup's dynamic peer list / pollutant name
+        const peerNamesEl = document.getElementById("cfPeerNames");
+        const pollNameEl  = document.getElementById("cfPollName");
+        if (peerNamesEl) peerNamesEl.textContent = peers.map(p => p.name).join("、");
+        if (pollNameEl)  pollNameEl.textContent  = pollLabel;
+      }
+
+      function render() {
+        const meta = POLL_META[pollKey];
+        const color = meta.color;
+        const peers = activePeers(pollKey);
+
+        updateDeck(peers, color, meta.label);
+
+        const allVals = series.flatMap(d => [
+          valueFor(d, "beijing"),
+          counterfactualVal(d, peers),
+          ...peers.map(p => valueFor(d, p.key))
+        ]).filter(v => v != null);
+        const yMax = d3.max(allVals) * 1.10;
+        yScale.domain([0, yMax]);
+
+        const yTicks = yScale.ticks(6);
+        gYAxis.transition().duration(550).call(
+          d3.axisLeft(yScale)
+            .tickValues(yTicks)
+            .tickFormat(mode === "indexed" ? d => d : d3.format("~d"))
+            .tickSize(0).tickPadding(10)
+        );
+        gYAxis.select(".domain").remove();
+
+        const grid = gGrid.selectAll("line").data(yTicks, d => d);
+        grid.join(
+          enter => enter.append("line")
+            .attr("x1", 0).attr("x2", W)
+            .attr("y1", d => yScale(d)).attr("y2", d => yScale(d)),
+          update => update.transition().duration(550)
+            .attr("y1", d => yScale(d)).attr("y2", d => yScale(d)),
+          exit => exit.remove()
+        );
+
+        const showBase = mode === "indexed";
+        baselineRule
+          .attr("y1", yScale(100)).attr("y2", yScale(100))
+          .style("display", showBase ? null : "none");
+        baselineLabel
+          .attr("y", yScale(100) - 5)
+          .style("display", showBase ? null : "none");
+
+        d3.select("#didYAxisTitle").text(
+          mode === "indexed"
+            ? `${meta.label} 指数（2013 = 100）`
+            : `${meta.label} 年均浓度（µg/m³）`
+        );
+
+        // peer lines — stroke set via .style() so CSS can't override
+        const peerSel = gPeerLines.selectAll("path.line-peer").data(peers, p => p.key);
+        peerSel.join(
+          enter => enter.append("path").attr("class", "line-peer"),
+          update => update,
+          exit => exit.remove()
+        );
+        gPeerLines.selectAll("path.line-peer").each(function (p) {
+          lineGen.y(d => yScale(valueFor(d, p.key)));
+          d3.select(this).transition().duration(700)
+            .style("stroke", p.color)
+            .attr("d", lineGen(series));
+        });
+
+        // peer year-dots — small (r=2.5) so Beijing dominates
+        const peerDotData = peers.flatMap(p => series.map(d => ({ peer: p, d })));
+        const pd = gPeerDots.selectAll("circle").data(peerDotData,
+          x => `${x.peer.key}-${x.d.year}`);
+        pd.join(
+          enter => enter.append("circle").attr("class", "year-dot").attr("r", 2.5)
+            .attr("cx", x => xScale(x.d.year))
+            .attr("cy", x => yScale(valueFor(x.d, x.peer.key)))
+            .attr("fill", x => x.peer.color),
+          update => update.transition().duration(700)
+            .attr("cx", x => xScale(x.d.year))
+            .attr("cy", x => yScale(valueFor(x.d, x.peer.key)))
+            .attr("fill", x => x.peer.color),
+          exit => exit.remove()
+        );
+
+        // Beijing actual line — glow (wide low-opacity) + main stroke
+        lineGen.y(d => yScale(valueFor(d, "beijing")));
+        const beijingPath = lineGen(series);
+        treatGlowPath.datum(series).transition().duration(700)
+          .attr("d", beijingPath).style("stroke", color);
+        treatPath.datum(series).transition().duration(700)
+          .attr("d", beijingPath).attr("stroke", color);
+
+        // Counterfactual Beijing — dashed line scaled from BJ-2013 by peer trend
+        const cfSeries = series.filter(d => counterfactualVal(d, peers) != null);
+        lineGen.y(d => yScale(counterfactualVal(d, peers)));
+        cfPath.datum(cfSeries).transition().duration(700)
+          .attr("d", lineGen).style("stroke", color);
+
+        // Treatment-effect wedge — between Beijing ACTUAL and COUNTERFACTUAL.
+        areaGen
+          .y0(d => {
+            const cf = counterfactualVal(d, peers);
+            return cf == null ? yScale(valueFor(d, "beijing")) : yScale(cf);
+          })
+          .y1(d => yScale(valueFor(d, "beijing")));
+        gapPath.datum(cfSeries).transition().duration(700)
+          .attr("d", areaGen).attr("fill", color);
+
+        // "Beijing 2013 starting line" reference rule — anchors the visual
+        // drop in absolute mode.  In indexed mode this would duplicate the
+        // gray "基线 100" rule (every city starts at 100 indexed), so hide it.
+        const bj0Y = yScale(valueFor(series[0], "beijing"));
+        const isIndexed = mode === "indexed";
+
+        bjAnchorRule.transition().duration(700)
+          .attr("y1", bj0Y).attr("y2", bj0Y).style("stroke", color)
+          .style("display", isIndexed ? "none" : null);
+
+        // text() + style() set SYNCHRONOUSLY before getBBox so the bbox
+        // reflects the new text (transition.text() defers application).
+        const anchorText = `北京 2013 = ${series[0].beijing.toFixed(1)} µg/m³`;
+        const anchorX = xScale(2019.5);
+        const labelY  = bj0Y - 14;
+
+        bjAnchorLabel
+          .text(anchorText)
+          .style("fill", color)
+          .style("display", isIndexed ? "none" : null)
+          .attr("dominant-baseline", "middle");
+        const lbb = bjAnchorLabel.node().getBBox();
+        bjAnchorLabel.transition().duration(700)
+          .attr("x", anchorX).attr("y", labelY);
+
+        const chipW = lbb.width + 16;
+        const chipH = lbb.height + 4;
+        bjAnchorChip.transition().duration(700)
+          .attr("x", anchorX - chipW / 2)
+          .attr("y", labelY - chipH / 2)
+          .attr("width", chipW)
+          .attr("height", chipH)
+          .style("display", isIndexed ? "none" : null);
+
+        // Beijing year-dots
+        const dotsT = gTreatDots.selectAll("circle").data(series, d => d.year);
+        dotsT.join(
+          enter => enter.append("circle").attr("class", "year-dot").attr("r", 4)
+            .attr("cx", d => xScale(d.year))
+            .attr("cy", d => yScale(valueFor(d, "beijing")))
+            .attr("fill", color),
+          update => update.transition().duration(700)
+            .attr("cx", d => xScale(d.year))
+            .attr("cy", d => yScale(valueFor(d, "beijing")))
+            .attr("fill", color)
+        );
+
+        // endpoint anchor dots (text labels handled by unified layout below)
+        const last = series[series.length - 1];
+        const lastX = xScale(last.year);
+        const treatY = yScale(valueFor(last, "beijing"));
+
+        beijingHalo.transition().duration(700)
+          .attr("cx", lastX).attr("cy", treatY).attr("stroke", color);
+        beijingEnd.transition().duration(700)
+          .attr("cx", lastX).attr("cy", treatY).attr("fill", color);
+
+        // peer endpoint dots
+        const peerEndData = peers.map(p => ({ peer: p, y: yScale(valueFor(last, p.key)) }))
+          .filter(o => !isNaN(o.y));
+        const pe = gPeerEnds.selectAll("circle").data(peerEndData, o => o.peer.key);
+        pe.join(
+          enter => enter.append("circle").attr("class", "endpoint-dot").attr("r", 4)
+            .attr("cx", lastX).attr("cy", o => o.y).attr("fill", o => o.peer.color),
+          update => update.transition().duration(700)
+            .attr("cx", lastX).attr("cy", o => o.y).attr("fill", o => o.peer.color),
+          exit => exit.remove()
+        );
+
+        // ---- UNIFIED END-LABEL LAYOUT (collision-free) ----
+        // Build a single list of all right-edge labels and run them through
+        // the greedy stacker so nothing overlaps.
+        const labelItems = [];
+        labelItems.push({
+          key: "beijing",
+          name: "北京",
+          value: mode === "indexed"
+            ? `${valueFor(last, "beijing").toFixed(0)}（${fmtPct(valueFor(last, "beijing"))}）`
+            : `${last.beijing.toFixed(1)} µg/m³`,
+          color, isHero: true, naturalY: treatY
+        });
+        peers.forEach(p => {
+          const v = valueFor(last, p.key);
+          if (v == null || isNaN(v)) return;
+          labelItems.push({
+            key: p.key, name: p.name,
+            value: mode === "indexed"
+              ? `${v.toFixed(0)}（${fmtPct(v)}）`
+              : `${last[p.key].toFixed(1)} µg/m³`,
+            color: p.color, isHero: false, naturalY: yScale(v)
+          });
+        });
+        if (cfSeries.length > 0) {
+          const lastCf = cfSeries[cfSeries.length - 1];
+          const cfV = counterfactualVal(lastCf, peers);
+          labelItems.push({
+            key: "cf", name: "反事实北京",
+            // Short value text in both modes; the meaning is documented in
+            // the popup (hover the label).
+            value: mode === "indexed"
+              ? `≈ ${cfV.toFixed(0)}`
+              : `≈ ${cfV.toFixed(0)} µg/m³`,
+            color, isHero: false, isCounterfactual: true,
+            naturalY: yScale(cfV)
+          });
+        }
+
+        // Single-line label height ≈ 16px; 24px gap gives ~10px clear band.
+        layoutLabels(labelItems, 24, 8, H - 4);
+
+        const labelSel = gEndLabels.selectAll("g.end-label").data(labelItems, d => d.key);
+        const labelEnter = labelSel.enter().append("g")
+          .attr("class", d => "end-label" + (d.isCounterfactual ? " is-cf" : ""));
+        labelEnter.append("path").attr("class", "leader-line");
+        const tEnter = labelEnter.append("text").attr("class", "end-label-text").attr("x", W + 16);
+        tEnter.append("tspan").attr("class", "lbl-name");
+        tEnter.append("tspan").attr("class", "lbl-value").attr("dx", 6);
+        labelSel.exit().remove();
+
+        // Update the existing class attribute too (in case data identity flipped)
+        gEndLabels.selectAll("g.end-label")
+          .attr("class", d => "end-label" + (d.isCounterfactual ? " is-cf" : ""));
+
+        gEndLabels.selectAll("g.end-label").each(function (d) {
+          const g = d3.select(this);
+          // leader = right-angle path from data point (W, naturalY) to label (W+14, d.y)
+          const path = `M ${W + 2} ${d.naturalY} L ${W + 7} ${d.naturalY} L ${W + 12} ${d.y} L ${W + 14} ${d.y}`;
+          g.select("path.leader-line").transition().duration(700)
+            .attr("d", path).style("stroke", d.color);
+          const tEl = g.select("text.end-label-text");
+          tEl.transition().duration(700).attr("y", d.y + 4);  // baseline center
+          tEl.select("tspan.lbl-name")
+            .style("fill", d.color)
+            .text(d.name);
+          tEl.select("tspan.lbl-value")
+            .style("fill", d.isHero ? d.color : "#6b6b73")
+            .style("font-weight", d.isHero ? 600 : 500)
+            .text(d.value);
+        });
+
+        // Bind hover handlers on the counterfactual label (idempotent rebind).
+        // 350ms grace + popup-hover keeps it visible so the user can read.
+        gEndLabels.selectAll("g.end-label.is-cf")
+          .on("mouseenter", function () {
+            if (!cfInfoEl) return;
+            if (cfHideTimer) { clearTimeout(cfHideTimer); cfHideTimer = null; }
+            cfInfoEl.classList.add("is-visible");
+            const rect = this.getBoundingClientRect();
+            const ttW = cfInfoEl.offsetWidth;
+            const pad = 12;
+            let cx = rect.left + rect.width / 2;
+            if (cx + ttW / 2 > window.innerWidth - pad) cx = window.innerWidth - ttW / 2 - pad;
+            if (cx - ttW / 2 < pad) cx = ttW / 2 + pad;
+            cfInfoEl.style.left = cx + "px";
+            cfInfoEl.style.top  = (rect.top - 6) + "px";
+          })
+          .on("mouseleave", function () {
+            if (!cfInfoEl) return;
+            cfHideTimer = setTimeout(() => {
+              cfInfoEl.classList.remove("is-visible");
+            }, 350);
+          });
+
+        // ----- stat banner -----
+        // bjAbs    : Beijing actual 2025 (always in absolute µg/m³)
+        // bjPctChg : Beijing % change vs 2013
+        // peerPctChg : peer-mean % change vs 2013 (independent of mode)
+        // cfAbs    : Beijing counterfactual 2025 (BJ_2013 × peer growth)
+        // didAbs   : counterfactual − actual = DiD effect in µg/m³
+        const bjAbs = last.beijing;
+        const bj0   = series[0].beijing;
+        const bjPctChg = (bjAbs - bj0) / bj0 * 100;
+        const peerAbsList = peers.map(p => last[p.key]).filter(v => v != null);
+        const peer0List   = peers.map(p => series[0][p.key]).filter(v => v != null);
+        const peerAbsMean = peerAbsList.length ? peerAbsList.reduce((a,b)=>a+b,0)/peerAbsList.length : null;
+        const peer0Mean   = peer0List.length ? peer0List.reduce((a,b)=>a+b,0)/peer0List.length : null;
+        const peerPctChg  = (peerAbsMean != null && peer0Mean) ? (peerAbsMean - peer0Mean) / peer0Mean * 100 : null;
+        const cfAbs       = (peerAbsMean != null && peer0Mean) ? bj0 * (peerAbsMean / peer0Mean) : null;
+        const didAbs      = cfAbs != null ? cfAbs - bjAbs : null;
+
+        document.querySelector(".stat-card.stat-hero").style.borderColor =
+          `rgba(${parseInt(color.slice(1,3),16)},${parseInt(color.slice(3,5),16)},${parseInt(color.slice(5,7),16)},0.28)`;
+        document.querySelector(".stat-card.stat-hero").style.background =
+          `linear-gradient(180deg, rgba(${parseInt(color.slice(1,3),16)},${parseInt(color.slice(3,5),16)},${parseInt(color.slice(5,7),16)},0.05) 0%, var(--bg-2) 70%)`;
+
+        const heroVal = document.getElementById("statBjVal");
+        const heroSub = document.getElementById("statBjSub");
+        heroVal.style.color = color;
+        heroVal.textContent = `${bjPctChg >= 0 ? "+" : "−"}${Math.abs(bjPctChg).toFixed(0)}%`;
+        heroSub.innerHTML = `${meta.label}：<b>${bj0.toFixed(1)} → ${bjAbs.toFixed(1)} µg/m³</b>`;
+
+        const peerLabel = peers.length > 1 ? `${peers.length} 城均值` : peers[0].name;
+        document.querySelector("#didStats .stat-card:nth-child(2) .stat-label").textContent =
+          `对照组 · ${peerLabel}`;
+        document.getElementById("statPeerVal").textContent =
+          peerPctChg == null ? "—"
+            : `${peerPctChg >= 0 ? "+" : "−"}${Math.abs(peerPctChg).toFixed(0)}%`;
+        document.getElementById("statPeerSub").innerHTML =
+          peerAbsMean == null ? "—"
+            : `${peer0Mean.toFixed(0)} → <b>${peerAbsMean.toFixed(0)} µg/m³</b>`;
+
+        document.getElementById("statDidVal").textContent =
+          didAbs == null ? "—"
+            : `${didAbs >= 0 ? "−" : "+"}${Math.abs(didAbs).toFixed(0)} µg/m³`;
+        document.getElementById("statDidSub").innerHTML =
+          cfAbs == null ? "—"
+            : `反事实 <b>${cfAbs.toFixed(0)}</b> − 实际 <b>${bjAbs.toFixed(0)}</b>`;
+      }
+
+      overlay.on("mousemove", function (event) {
+        const [mx] = d3.pointer(event, this);
+        const yrRaw = Math.max(DID_YEAR_MIN, Math.min(DID_YEAR_MAX, xScale.invert(mx)));
+        const meta = POLL_META[pollKey];
+        const peers = activePeers(pollKey);
+
+        // ---- linear interpolation between adjacent annual data points ----
+        // Underlying data is annual; we linearly interpolate so the hover
+        // can resolve to month granularity. (Months are an interpolation of
+        // annual means, not actual monthly measurements — labelled "插值".)
+        const yearFloor = Math.min(DID_YEAR_MAX - 1, Math.floor(yrRaw));
+        const frac = Math.max(0, Math.min(1, yrRaw - yearFloor));
+        const monthNum = Math.max(1, Math.min(12, Math.floor(frac * 12) + 1));
+
+        const dLo = series.find(d => d.year === yearFloor) || series[0];
+        const dHi = series.find(d => d.year === yearFloor + 1) || dLo;
+
+        function interpField(field) {
+          const lo = dLo[field], hi = dHi[field];
+          if (lo == null || hi == null) return null;
+          return lo + frac * (hi - lo);
+        }
+        function interpValueFor(who) {
+          const v = interpField(who);
+          if (v == null) return null;
+          const base0 = series[0][who];
+          return mode === "indexed" ? (v / base0) * 100 : v;
+        }
+
+        const xPos = xScale(yrRaw);
+        const bjInterp = interpValueFor("beijing");
+        const treatY = yScale(bjInterp);
+
+        hoverRule.attr("x1", xPos).attr("x2", xPos).style("opacity", 0.55);
+        hoverTreatDot.attr("cx", xPos).attr("cy", treatY)
+          .attr("fill", meta.color).style("opacity", 1);
+
+        // peer hover dots
+        const hPeerData = peers.map(p => ({
+          peer: p, y: yScale(interpValueFor(p.key)), v: interpValueFor(p.key)
+        })).filter(o => !isNaN(o.y));
+        const hp = gHoverPeerDots.selectAll("circle").data(hPeerData, o => o.peer.key);
+        hp.join(
+          enter => enter.append("circle").attr("class", "hover-dot").attr("r", 5),
+          update => update,
+          exit => exit.remove()
+        );
+        gHoverPeerDots.selectAll("circle").each(function (o) {
+          d3.select(this)
+            .attr("cx", xPos).attr("cy", o.y)
+            .attr("fill", o.peer.color)
+            .style("opacity", 1);
+        });
+
+        const unit = mode === "indexed" ? "" : " µg/m³";
+        const decimals = mode === "indexed" ? 0 : 1;
+        const dateLabel = `${yearFloor}年${monthNum}月 <span class="interp-tag">插值</span>`;
+
+        let html = `<div class="name">${dateLabel} · ${meta.label}</div>`;
+        html += `<div class="row"><span class="k"><span class="swatch" style="background:${meta.color}"></span>北京</span><span class="v">${bjInterp.toFixed(decimals)}${unit}</span></div>`;
+        peers.forEach(p => {
+          const v = interpValueFor(p.key);
+          if (v != null) {
+            html += `<div class="row"><span class="k"><span class="swatch" style="background:${p.color}"></span>${p.name}</span><span class="v">${v.toFixed(decimals)}${unit}</span></div>`;
+          }
+        });
+
+        tooltipEl.innerHTML = html;
+        tooltipEl.classList.add("is-visible");
+
+        const pad = 12;
+        const tw = tooltipEl.offsetWidth;
+        const th = tooltipEl.offsetHeight;
+        let px = event.clientX;
+        let py = event.clientY;
+        if (px - tw / 2 < pad) px = tw / 2 + pad;
+        if (px + tw / 2 > window.innerWidth - pad) px = window.innerWidth - tw / 2 - pad;
+        if (py - th - 14 < pad) py = event.clientY + th + 24;
+        tooltipEl.style.left = px + "px";
+        tooltipEl.style.top = py + "px";
+      });
+
+      overlay.on("mouseleave", () => {
+        hoverRule.style("opacity", 0);
+        hoverTreatDot.style("opacity", 0);
+        gHoverPeerDots.selectAll("circle").style("opacity", 0);
+        tooltipEl.classList.remove("is-visible");
+      });
+
+      // pollutant toggle
+      document.querySelectorAll("#pollRow .mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#pollRow .mode-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          pollKey = btn.dataset.poll;
+          series = buildSeries(pollKey);
+          render();
+        });
+      });
+
+      // mode toggle
+      document.querySelectorAll("#modeRow .mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#modeRow .mode-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          mode = btn.dataset.mode;
+          render();
+        });
+      });
+
+      render();
+    }
 
   </script>
 </body>

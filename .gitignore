@@ -1,1 +1,10 @@
 data/
+
+# raw per-day CSVs from AQICN — superseded by consolidated beijing-air-quality.csv
+beijing_*/
+beijing_pm25_*/
+
+# python helpers / caches
+__pycache__/
+*.pyc
+
