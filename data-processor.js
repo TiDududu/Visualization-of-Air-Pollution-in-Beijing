@@ -72,6 +72,7 @@ async function loadAndProcessData(csvPath) {
   });
   
   // Filter for valid years (2013-2026)
+  // 2026 is partial (Jan–Apr) but needed as interpolation endpoint for 2025 animation
   const validData = rawData.filter(d => {
     if (!d.date) return false;
     const year = parseInt(d.date.split('/')[0], 10);
