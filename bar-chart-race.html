@@ -1746,6 +1746,20 @@
       const lineGen = d3.line().x(d => xScale(d.year)).curve(d3.curveMonotoneX);
       const areaGen = d3.area().x(d => xScale(d.year)).curve(d3.curveMonotoneX);
 
+      // Helper: appends a synthetic copy of the last row at year=DID_X_AXIS_END
+      // (e.g. 2026) so the path visually extends through the full last data
+      // year before the chart ends.  The synthetic row carries the same
+      // values as the last real row, producing a flat segment from year-end
+      // to the next x-axis tick.  Marked _synthetic so endpoint/dot logic
+      // can skip it.  Used ONLY for line/area drawing, never for dots or
+      // statistics — those use the real series so they reflect actual data.
+      function extendForLine(s) {
+        if (!s || s.length === 0) return s;
+        const last = s[s.length - 1];
+        if (last.year >= DID_X_AXIS_END) return s;
+        return [...s, { ...last, year: DID_X_AXIS_END, _synthetic: true }];
+      }
+
       let mode = "absolute";   // start with raw concentrations — most honest
       let pollKey = "pm25";
       let series = buildSeries(pollKey);
@@ -1901,6 +1915,11 @@
             : `${meta.label} 年均浓度（µg/m³）`
         );
 
+        // Drawing series carries an extra synthetic 2026 row so each line
+        // visually extends through all of 2025 to the next x-axis tick.
+        // Dots / stats / endpoints still consume `series` (real data only).
+        const seriesForLine = extendForLine(series);
+
         // peer lines — stroke set via .style() so CSS can't override
         const peerSel = gPeerLines.selectAll("path.line-peer").data(peers, p => p.key);
         peerSel.join(
@@ -1912,7 +1931,7 @@
           lineGen.y(d => yScale(valueFor(d, p.key)));
           d3.select(this).transition().duration(700)
             .style("stroke", p.color)
-            .attr("d", lineGen(series));
+            .attr("d", lineGen(seriesForLine));
         });
 
         // peer year-dots — small (r=2.5) so Beijing dominates
@@ -1933,26 +1952,29 @@
 
         // Beijing actual line — glow (wide low-opacity) + main stroke
         lineGen.y(d => yScale(valueFor(d, "beijing")));
-        const beijingPath = lineGen(series);
-        treatGlowPath.datum(series).transition().duration(700)
+        const beijingPath = lineGen(seriesForLine);
+        treatGlowPath.datum(seriesForLine).transition().duration(700)
           .attr("d", beijingPath).style("stroke", color);
-        treatPath.datum(series).transition().duration(700)
+        treatPath.datum(seriesForLine).transition().duration(700)
           .attr("d", beijingPath).attr("stroke", color);
 
         // Counterfactual Beijing — dashed line scaled from BJ-2013 by peer trend
         const cfSeries = series.filter(d => counterfactualVal(d, peers) != null);
+        const cfSeriesForLine = extendForLine(cfSeries);
         lineGen.y(d => yScale(counterfactualVal(d, peers)));
-        cfPath.datum(cfSeries).transition().duration(700)
+        cfPath.datum(cfSeriesForLine).transition().duration(700)
           .attr("d", lineGen).style("stroke", color);
 
         // Treatment-effect wedge — between Beijing ACTUAL and COUNTERFACTUAL.
+        // Extend the wedge through 2025's full year (synthetic 2026 row)
+        // so the shaded area matches the line's visual reach.
         areaGen
           .y0(d => {
             const cf = counterfactualVal(d, peers);
             return cf == null ? yScale(valueFor(d, "beijing")) : yScale(cf);
           })
           .y1(d => yScale(valueFor(d, "beijing")));
-        gapPath.datum(cfSeries).transition().duration(700)
+        gapPath.datum(cfSeriesForLine).transition().duration(700)
           .attr("d", areaGen).attr("fill", color);
 
         const isIndexed = mode === "indexed";
@@ -2209,7 +2231,10 @@
 
       overlay.on("mousemove", function (event) {
         const [mx] = d3.pointer(event, this);
-        const yrRaw = Math.max(DID_YEAR_MIN, Math.min(DID_YEAR_MAX, xScale.invert(mx)));
+        // yrRaw is clamped to [2013, 2026].  Past the last data year (2025)
+        // we still allow the cursor to read months of 2025 — within that
+        // segment the value held constant at the 2025 annual mean.
+        const yrRaw = Math.max(DID_YEAR_MIN, Math.min(DID_X_AXIS_END, xScale.invert(mx)));
         const meta = POLL_META[pollKey];
         const peers = activePeers(pollKey);
 
@@ -2217,18 +2242,20 @@
         // Underlying data is annual; we linearly interpolate so the hover
         // can resolve to month granularity. (Months are an interpolation of
         // annual means, not actual monthly measurements — labelled "插值".)
-        // At the last data year (e.g. yrRaw = 2025 when series ends at 2025)
-        // there is no next year to interpolate against — we collapse to the
-        // exact data point and label it as the annual mean.
+        // For yrRaw inside the synthetic extension at the right edge
+        // (yrRaw in [lastDataYear, DID_X_AXIS_END]) the date label shows
+        // "YYYY年X月" where YYYY = lastDataYear and the value is the
+        // lastDataYear annual mean (constant within the year, tagged "年均").
         const lastDataYear = series[series.length - 1].year;
-        const atLastYear = yrRaw >= lastDataYear;
-        const yearFloor = atLastYear ? lastDataYear : Math.floor(yrRaw);
-        const frac = atLastYear ? 0 : Math.max(0, Math.min(1, yrRaw - yearFloor));
-        const monthNum = atLastYear ? null
-                                    : Math.max(1, Math.min(12, Math.floor(frac * 12) + 1));
+        const inExtension = yrRaw >= lastDataYear;
+        const yearFloor = inExtension ? lastDataYear : Math.floor(yrRaw);
+        const frac = inExtension
+          ? Math.min(0.9999, Math.max(0, yrRaw - lastDataYear))
+          : Math.max(0, Math.min(1, yrRaw - yearFloor));
+        const monthNum = Math.max(1, Math.min(12, Math.floor(frac * 12) + 1));
 
         const dLo = series.find(d => d.year === yearFloor) || series[0];
-        const dHi = atLastYear ? dLo : (series.find(d => d.year === yearFloor + 1) || dLo);
+        const dHi = inExtension ? dLo : (series.find(d => d.year === yearFloor + 1) || dLo);
 
         function interpField(field) {
           const lo = dLo[field], hi = dHi[field];
@@ -2285,8 +2312,10 @@
 
         const unit = mode === "indexed" ? "" : " µg/m³";
         const decimals = mode === "indexed" ? 0 : 1;
-        const dateLabel = atLastYear
-          ? `${yearFloor} 年 <span class="interp-tag">年均</span>`
+        // Tag: "插值" for between-year interpolation, "年均" when sitting in
+        // the last-data-year's extension (value held constant at annual mean).
+        const dateLabel = inExtension
+          ? `${yearFloor}年${monthNum}月 <span class="interp-tag">年均</span>`
           : `${yearFloor}年${monthNum}月 <span class="interp-tag">插值</span>`;
 
         let html = `<div class="name">${dateLabel} · ${meta.label}</div>`;
