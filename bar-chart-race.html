@@ -2065,8 +2065,12 @@
         );
 
         // endpoint anchor dots (text labels handled by unified layout below)
+        // `last` is the real 2025 row (drives all numeric values), while
+        // `lastX` is the x of the LINE's visible end (2026 tick — the
+        // synthetic-extension terminus), so the halo / end dots sit at
+        // the tail of the rendered line rather than at the 2025 tick.
         const last = series[series.length - 1];
-        const lastX = xScale(last.year);
+        const lastX = xScale(DID_X_AXIS_END);
         const treatY = yScale(valueFor(last, "beijing"));
 
         beijingHalo.transition().duration(700)
@@ -2074,7 +2078,7 @@
         beijingEnd.transition().duration(700)
           .attr("cx", lastX).attr("cy", treatY).attr("fill", color);
 
-        // peer endpoint dots
+        // peer endpoint dots — also anchored to the line's visible tail.
         const peerEndData = peers.map(p => ({ peer: p, y: yScale(valueFor(last, p.key)) }))
           .filter(o => !isNaN(o.y));
         const pe = gPeerEnds.selectAll("circle").data(peerEndData, o => o.peer.key);
