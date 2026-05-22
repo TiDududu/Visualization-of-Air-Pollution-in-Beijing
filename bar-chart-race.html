@@ -640,6 +640,7 @@
       stroke-width: 4.6px;
       stroke-linecap: round;
       stroke-linejoin: round;
+      pointer-events: none;
     }
 
     /* Wider transparent line painted behind Beijing — produces a soft glow
@@ -651,6 +652,7 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       opacity: 0.13;
+      pointer-events: none;
     }
 
     /* Right-edge label leader line — from data point to displaced label */
@@ -658,23 +660,37 @@
       fill: none;
       stroke-width: 0.8px;
       opacity: 0.35;
+      pointer-events: none;
     }
 
-    /* "Beijing 2013 starting line" reference — makes the magnitude of the
-       drop legible by anchoring the original level visually. */
-    .bj-anchor-rule {
-      stroke: var(--pm25);
-      stroke-width: 1px;
-      stroke-dasharray: 3 6;
-      opacity: 0.32;
-    }
-
-    .bj-anchor-label {
+    /* Per-line starting-value labels (replaces the mid-chart anchor chip).
+       One small chip per series, sitting next to each line's 2013 start
+       point with color matched to its line.  Beijing gets bold weight. */
+    .start-val-text {
       font-family: "IBM Plex Mono", monospace;
-      font-size: 10.5px;
-      fill: var(--pm25);
-      opacity: 0.75;
-      letter-spacing: 0.04em;
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
+    .start-val-text.is-hero {
+      font-weight: 700;
+      font-size: 11.5px;
+    }
+
+    /* Tiny white halo behind each start-value so y-axis tick text and the
+       overlapping line can't bleed through it. */
+    .start-val-chip {
+      fill: var(--bg-2);
+      stroke: none;
+      pointer-events: none;
+    }
+
+    .start-val-leader {
+      fill: none;
+      stroke-width: 0.8px;
+      opacity: 0.45;
+      pointer-events: none;
     }
 
     /* Peer city lines — color is set per-line via JS .style() so CSS does
@@ -686,6 +702,7 @@
       stroke-linejoin: round;
       stroke-dasharray: 6 5;
       opacity: 0.92;
+      pointer-events: none;
     }
 
     /* Treatment-effect wedge — between Beijing actual and Beijing
@@ -693,6 +710,7 @@
        area and the headline DiD claim. */
     .gap-area {
       opacity: 0.18;
+      pointer-events: none;
     }
 
     /* Counterfactual Beijing — "what BJ would have been if it tracked peers".
@@ -704,18 +722,21 @@
       stroke-width: 2.4px;
       stroke-dasharray: 3 4;
       opacity: 0.78;
+      pointer-events: none;
     }
 
 
     .endpoint-dot {
       stroke: #fff;
       stroke-width: 2px;
+      pointer-events: none;
     }
 
     .endpoint-halo {
       fill: none;
       stroke-width: 2px;
       opacity: 0.35;
+      pointer-events: none;
     }
 
     /* Right-edge labels: single line with two tspans (name + value).
@@ -747,17 +768,10 @@
       cursor: help;
     }
 
-    /* Beijing 2013 anchor — placed mid-chart with white chip background */
-    .bj-anchor-chip {
-      fill: var(--bg-2);
-      stroke: rgba(196, 69, 54, 0.35);
-      stroke-width: 1px;
-      rx: 4;
-    }
-
     .year-dot {
       stroke: #fff;
       stroke-width: 1.2px;
+      pointer-events: none;
     }
 
     .hover-rule {
@@ -780,6 +794,17 @@
       stroke-width: 1px;
       stroke-dasharray: 4 4;
       opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* "基线 100" label — kept legible by a white chip behind it so no peer
+       line crossing y=100 can compress it visually. */
+    .baseline-label-chip {
+      fill: var(--bg-2);
+      stroke: rgba(107, 107, 115, 0.25);
+      stroke-width: 1px;
+      rx: 3;
+      pointer-events: none;
     }
 
     .baseline-label {
@@ -787,6 +812,7 @@
       font-size: 10px;
       fill: var(--ink-soft);
       letter-spacing: 0.06em;
+      pointer-events: none;
     }
 
     /* ---------- DID stat banner ---------- */
@@ -1578,28 +1604,24 @@
         .attr("text-anchor", "end")
         .text("年份  →");
 
-      // baseline rule (indexed mode only) — label on LEFT to avoid endpoint labels
+      // baseline rule (indexed mode only) — chip + label placed near the
+      // right margin where peer trajectories have already diverged from
+      // 100, so the label is never crossed by a line.
       const baselineRule = gBaseline.append("line").attr("class", "baseline-rule")
         .attr("x1", 0).attr("x2", W);
+      const baselineChip  = gBaseline.append("rect").attr("class", "baseline-label-chip");
       const baselineLabel = gBaseline.append("text").attr("class", "baseline-label")
-        .attr("x", 6).attr("text-anchor", "start").text("基线 100");
+        .attr("text-anchor", "end").text("基线 100");
 
       // layers (bottom → top):
-      //   bjAnchorRule  — dashed horizontal at Beijing's own 2013 level
       //   gapPath       — wedge between BJ actual & counterfactual (DiD)
       //   gPeerLines    — dashed peer-city lines
       //   cfPath        — Beijing counterfactual line (dashed red)
       //   treatGlowPath — wide low-opacity halo behind Beijing's line
       //   treatPath     — Beijing actual line (thick, colored)
-      // Policy markers and the decorative under-Beijing gradient were
-      // intentionally removed.
-      const bjAnchorRule = root.append("line").attr("class", "bj-anchor-rule")
-        .attr("x1", 0).attr("x2", W);
-      // Mid-chart chip-backed label so the annotation doesn't crash into
-      // Beijing's early-year line (it did at the left edge).
-      const bjAnchorChip  = root.append("rect").attr("class", "bj-anchor-chip");
-      const bjAnchorLabel = root.append("text").attr("class", "bj-anchor-label")
-        .attr("text-anchor", "middle");
+      // The Beijing-2013 mid-chart anchor chip was retired in favor of
+      // per-line start-value labels rendered on the Y-axis margin (see
+      // gStartLabels below).
       const gapPath        = root.append("path").attr("class", "gap-area");
       const gPeerLines     = root.append("g").attr("class", "peer-lines");
       const gPeerDots      = root.append("g").attr("class", "peer-dots");
@@ -1607,6 +1629,11 @@
       const treatGlowPath  = root.append("path").attr("class", "line-treat-glow");
       const treatPath      = root.append("path").attr("class", "line-treat");
       const gTreatDots     = root.append("g").attr("class", "dots-treat");
+
+      // Left-edge start-value labels: one chip+text per series, anchored
+      // to each line's 2013 starting point.  Collision-avoidance reuses
+      // the same greedy stacker as the right-edge labels.
+      const gStartLabels = root.append("g").attr("class", "start-labels");
 
       // Unified end-label group — all right-edge labels routed through a
       // collision-avoidance layout pass so they can't stack.
@@ -1624,8 +1651,12 @@
       const hoverTreatDot = root.append("circle").attr("class", "hover-dot").attr("r", 6);
       const gHoverPeerDots = root.append("g").attr("class", "hover-peer-dots");
 
+      // Overlay covers the plot area plus a small 12px buffer on the right
+      // and bottom so hovers near the right-edge end-labels still resolve
+      // to the closest data year instead of falling off the rect.
       const overlay = root.append("rect")
-        .attr("width", W).attr("height", H)
+        .attr("x", 0).attr("y", 0)
+        .attr("width", W + 12).attr("height", H + 8)
         .attr("fill", "transparent")
         .style("cursor", "crosshair");
 
@@ -1767,8 +1798,23 @@
         baselineRule
           .attr("y1", yScale(100)).attr("y2", yScale(100))
           .style("display", showBase ? null : "none");
+
+        // Place "基线 100" near the right edge of the rule, where peer
+        // and counterfactual lines have diverged from 100 — keeps it off
+        // any crossing line.  Synchronous text/style so getBBox is accurate.
+        const baseY     = yScale(100);
+        const baseLblX  = W - 8;
         baselineLabel
-          .attr("y", yScale(100) - 5)
+          .text("基线 100")
+          .attr("x", baseLblX)
+          .attr("y", baseY - 5)
+          .style("display", showBase ? null : "none");
+        const bLb = baselineLabel.node().getBBox();
+        baselineChip
+          .attr("x", bLb.x - 5)
+          .attr("y", bLb.y - 2)
+          .attr("width",  bLb.width  + 10)
+          .attr("height", bLb.height + 4)
           .style("display", showBase ? null : "none");
 
         d3.select("#didYAxisTitle").text(
@@ -1831,39 +1877,77 @@
         gapPath.datum(cfSeries).transition().duration(700)
           .attr("d", areaGen).attr("fill", color);
 
-        // "Beijing 2013 starting line" reference rule — anchors the visual
-        // drop in absolute mode.  In indexed mode this would duplicate the
-        // gray "基线 100" rule (every city starts at 100 indexed), so hide it.
-        const bj0Y = yScale(valueFor(series[0], "beijing"));
         const isIndexed = mode === "indexed";
 
-        bjAnchorRule.transition().duration(700)
-          .attr("y1", bj0Y).attr("y2", bj0Y).style("stroke", color)
-          .style("display", isIndexed ? "none" : null);
+        // ---- per-line Y-axis start-value labels (replaces mid-chart chip) ----
+        // Build one entry per series with valid 2013 data, in line color.
+        // Beijing gets bold weight + slightly larger size (is-hero).  Stacker
+        // identical to the right-edge labels: greedy push + clip + back-pass.
+        // Hidden in indexed mode because every line starts at 100 there.
+        const startItems = [];
+        if (!isIndexed) {
+          const bj0Raw = series[0].beijing;
+          if (bj0Raw != null) {
+            startItems.push({
+              key: "beijing",
+              text: bj0Raw.toFixed(1),
+              color, isHero: true,
+              naturalY: yScale(valueFor(series[0], "beijing"))
+            });
+          }
+          peers.forEach(p => {
+            const v0 = series[0][p.key];
+            if (v0 == null || isNaN(v0)) return;
+            startItems.push({
+              key: p.key,
+              text: v0.toFixed(1),
+              color: p.color, isHero: false,
+              naturalY: yScale(valueFor(series[0], p.key))
+            });
+          });
+          // 22px gap (≈ font line-height) gives a clean clear band between
+          // adjacent start chips, even for cases where two cities' 2013
+          // baselines are within ~1 µg/m³ (e.g. NO2: BJ 56, Delhi 55).
+          layoutLabels(startItems, 22, 6, H - 4);
+        }
 
-        // text() + style() set SYNCHRONOUSLY before getBBox so the bbox
-        // reflects the new text (transition.text() defers application).
-        const anchorText = `北京 2013 = ${series[0].beijing.toFixed(1)} µg/m³`;
-        const anchorX = xScale(2019.5);
-        const labelY  = bj0Y - 14;
-
-        bjAnchorLabel
-          .text(anchorText)
-          .style("fill", color)
-          .style("display", isIndexed ? "none" : null)
+        const startSel = gStartLabels.selectAll("g.start-val").data(startItems, d => d.key);
+        const startEnter = startSel.enter().append("g")
+          .attr("class", d => "start-val" + (d.isHero ? " is-hero" : ""));
+        startEnter.append("path").attr("class", "start-val-leader");
+        startEnter.append("rect").attr("class", "start-val-chip");
+        startEnter.append("text").attr("class", "start-val-text")
+          .attr("text-anchor", "start")
           .attr("dominant-baseline", "middle");
-        const lbb = bjAnchorLabel.node().getBBox();
-        bjAnchorLabel.transition().duration(700)
-          .attr("x", anchorX).attr("y", labelY);
+        startSel.exit().remove();
+        gStartLabels.style("display", isIndexed ? "none" : null);
 
-        const chipW = lbb.width + 16;
-        const chipH = lbb.height + 4;
-        bjAnchorChip.transition().duration(700)
-          .attr("x", anchorX - chipW / 2)
-          .attr("y", labelY - chipH / 2)
-          .attr("width", chipW)
-          .attr("height", chipH)
-          .style("display", isIndexed ? "none" : null);
+        gStartLabels.selectAll("g.start-val").each(function (d) {
+          const g = d3.select(this);
+          g.attr("class", "start-val" + (d.isHero ? " is-hero" : ""));
+          // Place labels INSIDE the plot area, just right of the y-axis line.
+          // Sitting at x=6 keeps them clear of existing y-axis tick labels
+          // (which sit to the LEFT of x=0 in root coords) so they can't
+          // collide with the ticks the user already reads off the axis.
+          const tx = 6;                       // label left-edge x (root coords)
+          const ty = d.y;                     // displaced y from stacker
+          const tEl = g.select("text.start-val-text")
+            .attr("class", "start-val-text" + (d.isHero ? " is-hero" : ""))
+            .attr("text-anchor", "start")
+            .style("fill", d.color)
+            .text(d.text);
+          tEl.attr("x", tx).attr("y", ty);
+          const bb = tEl.node().getBBox();
+          g.select("rect.start-val-chip")
+            .attr("x", bb.x - 3).attr("y", bb.y - 1)
+            .attr("width", bb.width + 6).attr("height", bb.height + 2);
+          // Leader: from line's start point (x=0, y=naturalY) to label's
+          // left edge — short right-angle bracket entirely inside the plot.
+          const path = `M 0 ${d.naturalY} L 3 ${d.naturalY} L 3 ${ty} L ${tx - 1} ${ty}`;
+          g.select("path.start-val-leader")
+            .attr("d", path).style("stroke", d.color);
+          tEl.transition().duration(700).attr("x", tx).attr("y", ty);
+        });
 
         // Beijing year-dots
         const dotsT = gTreatDots.selectAll("circle").data(series, d => d.year);
@@ -2050,7 +2134,10 @@
         // Underlying data is annual; we linearly interpolate so the hover
         // can resolve to month granularity. (Months are an interpolation of
         // annual means, not actual monthly measurements — labelled "插值".)
-        const yearFloor = Math.min(DID_YEAR_MAX - 1, Math.floor(yrRaw));
+        // The last data year is series[series.length-1].year — never go past
+        // it for the upper bound so we don't compose against missing data.
+        const lastDataYear = series[series.length - 1].year;
+        const yearFloor = Math.min(lastDataYear - 1, Math.floor(yrRaw));
         const frac = Math.max(0, Math.min(1, yrRaw - yearFloor));
         const monthNum = Math.max(1, Math.min(12, Math.floor(frac * 12) + 1));
 
@@ -2059,18 +2146,32 @@
 
         function interpField(field) {
           const lo = dLo[field], hi = dHi[field];
-          if (lo == null || hi == null) return null;
+          if (lo == null && hi == null) return null;
+          if (lo == null) return hi;
+          if (hi == null) return lo;
           return lo + frac * (hi - lo);
         }
         function interpValueFor(who) {
           const v = interpField(who);
           if (v == null) return null;
           const base0 = series[0][who];
+          if (base0 == null || base0 === 0) return mode === "indexed" ? null : v;
           return mode === "indexed" ? (v / base0) * 100 : v;
         }
 
         const xPos = xScale(yrRaw);
         const bjInterp = interpValueFor("beijing");
+
+        // Hard guard: if Beijing data is missing here, skip rendering rather
+        // than throwing on .toFixed(null) and leaving a stale tooltip on screen.
+        if (bjInterp == null || isNaN(bjInterp)) {
+          hoverRule.style("opacity", 0);
+          hoverTreatDot.style("opacity", 0);
+          gHoverPeerDots.selectAll("circle").style("opacity", 0);
+          tooltipEl.classList.remove("is-visible");
+          return;
+        }
+
         const treatY = yScale(bjInterp);
 
         hoverRule.attr("x1", xPos).attr("x2", xPos).style("opacity", 0.55);
@@ -2078,9 +2179,11 @@
           .attr("fill", meta.color).style("opacity", 1);
 
         // peer hover dots
-        const hPeerData = peers.map(p => ({
-          peer: p, y: yScale(interpValueFor(p.key)), v: interpValueFor(p.key)
-        })).filter(o => !isNaN(o.y));
+        const hPeerData = peers
+          .map(p => ({ peer: p, v: interpValueFor(p.key) }))
+          .filter(o => o.v != null && !isNaN(o.v))
+          .map(o => ({ ...o, y: yScale(o.v) }))
+          .filter(o => !isNaN(o.y));
         const hp = gHoverPeerDots.selectAll("circle").data(hPeerData, o => o.peer.key);
         hp.join(
           enter => enter.append("circle").attr("class", "hover-dot").attr("r", 5),
@@ -2102,7 +2205,7 @@
         html += `<div class="row"><span class="k"><span class="swatch" style="background:${meta.color}"></span>北京</span><span class="v">${bjInterp.toFixed(decimals)}${unit}</span></div>`;
         peers.forEach(p => {
           const v = interpValueFor(p.key);
-          if (v != null) {
+          if (v != null && !isNaN(v)) {
             html += `<div class="row"><span class="k"><span class="swatch" style="background:${p.color}"></span>${p.name}</span><span class="v">${v.toFixed(decimals)}${unit}</span></div>`;
           }
         });
