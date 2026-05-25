@@ -2042,12 +2042,23 @@
           g.select("rect.start-val-chip")
             .attr("x", bb.x - 3).attr("y", bb.y - 1)
             .attr("width", bb.width + 6).attr("height", bb.height + 2);
-          // Leader: from chip's right edge, through the y-axis tick column,
-          // landing on the line's exact start at (0, naturalY).  Right-angle
-          // bracket so the reader's eye traces label → line cleanly.
-          const path = `M ${tx + 1} ${ty} L ${-6} ${ty} L ${-6} ${d.naturalY} L 0 ${d.naturalY}`;
-          g.select("path.start-val-leader")
-            .attr("d", path).style("stroke", d.color);
+          // Leader: only drawn when the stacker has displaced the chip from
+          // its natural y (e.g. NO2 baseline coincidence).  When the chip
+          // sits at its natural y, the chip's color + y-position alone
+          // unambiguously associate it with the matching line — drawing a
+          // horizontal leader there would cross through the y-axis tick
+          // numbers and add visual clutter.  When displaced, an L-shaped
+          // leader bridges the gap in the chip column (x=-6) which is
+          // safely to the RIGHT of all tick-number text (which sits at
+          // x in [-40, -10]).
+          const displaced = Math.abs(ty - d.naturalY) > 1.5;
+          const leaderEl = g.select("path.start-val-leader");
+          if (displaced) {
+            const path = `M ${tx + 1} ${ty} L ${-6} ${ty} L ${-6} ${d.naturalY} L 0 ${d.naturalY}`;
+            leaderEl.attr("d", path).style("stroke", d.color).style("display", null);
+          } else {
+            leaderEl.style("display", "none");
+          }
           tEl.transition().duration(700).attr("x", tx).attr("y", ty);
         });
 
