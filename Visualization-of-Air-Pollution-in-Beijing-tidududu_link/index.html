@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>北京空气质量改善与政策影响</title>
+    <link rel="stylesheet" href="src/styles.css?v=policy-structure-v11">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Visualization of Air Pollution in Beijing</p>
+          <h1>北京空气质量改善与政策影响</h1>
+        </div>
+        <div class="metric-toggle" aria-label="选择空气质量指标">
+          <button class="metric-button active" type="button" data-metric="AQI">AQI</button>
+          <button class="metric-button" type="button" data-metric="PM2.5">PM2.5</button>
+          <button class="metric-button" type="button" data-metric="PM10">PM10</button>
+        </div>
+      </header>
+
+      <section class="policy-dashboard" aria-label="北京空气质量改善与政策影响分析">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Policy Impact Dashboard</p>
+            <h2>治理强度提高后，污染峰值被压下来了</h2>
+          </div>
+          <p id="data-note" class="section-note"></p>
+        </div>
+
+        <div id="finding-grid" class="finding-grid"></div>
+
+        <article class="chart-panel monthly-motion-panel">
+          <div class="chart-heading">
+            <h3>逐月推进：污染变化与政策发布</h3>
+            <p>点击播放后，柱状图按月份显现；上方只保留政策结构，悬停节点查看政策详情。</p>
+          </div>
+          <div class="motion-controls">
+            <button id="motion-play-button" class="play-button" type="button">播放</button>
+            <div class="motion-metric-toggle" aria-label="选择动态图指标">
+              <button class="motion-metric-button active" type="button" data-motion-metric="pm25">PM2.5</button>
+              <button class="motion-metric-button" type="button" data-motion-metric="aqi">AQI</button>
+              <button class="motion-metric-button" type="button" data-motion-metric="pm10">PM10</button>
+            </div>
+            <div class="motion-scale-toggle" aria-label="选择纵轴比例尺">
+              <button class="motion-scale-button active" type="button" data-motion-scale="fixed">固定</button>
+              <button class="motion-scale-button" type="button" data-motion-scale="tracking">追踪</button>
+            </div>
+            <strong id="motion-current-month">2014-01</strong>
+            <input id="motion-slider" type="range" min="0" value="0" step="1" aria-label="选择月份">
+          </div>
+          <div class="monthly-motion-body">
+            <div id="monthly-motion-chart" class="chart motion-chart"></div>
+            <aside id="motion-policy-detail" class="motion-policy-detail-card" aria-live="polite"></aside>
+          </div>
+        </article>
+
+        <div class="chart-grid">
+          <article class="chart-panel chart-panel-wide">
+            <div class="chart-heading">
+              <h3>PM2.5 / AQI 年度趋势与政策节点</h3>
+              <p>站点小时均值先聚合为日均值，再聚合为年度均值。</p>
+            </div>
+            <div id="trend-chart" class="chart"></div>
+          </article>
+
+          <article class="chart-panel">
+            <div class="chart-heading">
+              <h3>关键政策周期对应降幅</h3>
+              <p>对比政策周期起止年份的 PM2.5 与优良天数。</p>
+            </div>
+            <div id="window-chart" class="chart compact-chart"></div>
+          </article>
+
+          <article class="chart-panel chart-panel-wide">
+            <div class="chart-heading">
+              <h3>冬季污染峰值的长期退潮</h3>
+              <p>每个格子是某年某月 PM2.5 均值，颜色越深污染越高。</p>
+            </div>
+            <div id="heatmap-chart" class="chart"></div>
+          </article>
+
+          <article class="chart-panel">
+            <div class="chart-heading">
+              <h3>AQI 等级天数结构</h3>
+              <p>优良天数扩张，重污染天数明显收缩。</p>
+            </div>
+            <div id="level-chart" class="chart compact-chart"></div>
+          </article>
+        </div>
+
+        <article class="timeline-panel">
+          <div class="chart-heading">
+            <h3>政策线索</h3>
+            <p>把政策目标与空气质量数据放在同一时间轴上看。</p>
+          </div>
+          <div id="policy-timeline" class="policy-timeline"></div>
+        </article>
+      </section>
+
+      <section class="map-panel" aria-label="北京空气质量静态地图">
+        <div id="map" class="map"></div>
+        <aside class="details" aria-live="polite">
+          <h2 id="detail-title">PM2.5 区域日均值</h2>
+          <p id="detail-summary">每个区域的空气质量由该区域内各监测站点的日均值求平均得到。</p>
+          <div class="date-control">
+            <div class="date-control-header">
+              <button id="play-button" class="play-button" type="button">播放</button>
+              <strong id="current-date">2014-01-01</strong>
+            </div>
+            <input id="date-slider" type="range" min="0" max="358" value="0" step="1" aria-label="选择 2014 年日期">
+          </div>
+          <div id="legend" class="legend"></div>
+          <div class="stats-grid">
+            <div>
+              <span class="stat-label">最高区域</span>
+              <strong id="max-region">-</strong>
+            </div>
+            <div>
+              <span class="stat-label">最低区域</span>
+              <strong id="min-region">-</strong>
+            </div>
+            <div>
+              <span class="stat-label">总站点数量</span>
+              <strong>35</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <div id="tooltip" class="tooltip" role="status"></div>
+    <script src="src/d3.v7.min.js"></script>
+    <script src="src/policy-impact-summary-data.js?v=policy-structure-v10"></script>
+    <script src="src/app.js?v=policy-structure-v11"></script>
+  </body>
+</html>
