@@ -1014,18 +1014,19 @@
         <div>
           <h3>数据来源</h3>
           <p>
-            北京月度 PM<sub>2.5</sub> 浓度由 AQICN 日 AQI 经 EPA 断点反算后求月均（与上方 DID 图同源，DID 图取年均）；
-            石家庄、邢台、太原月度数据来自 <code>aqistudy.cn</code> 实测均值（北京 2013 年无月度数据，邢台数据起点 2013-03，石家庄/太原起点 2013-12）；
-            全国均值取自生态环境部《中国生态环境状况公报》年度数据（2013–2017 为 74 重点城市口径，2018 年起为 338/339 城；以阶梯形式叠加显示）。
+            北京 PM<sub>2.5</sub> 年均浓度与上方 DID 图同源、同口径（含 2013 年），故两图北京曲线一致；
+            石家庄、邢台、太原年均值由 <code>aqistudy.cn</code> 月度实测聚合而得，仅取拥有完整 12 个月的年份（2013 为冬季单月数据，已从对照基准中剔除）；
+            全国均值取自生态环境部《中国生态环境状况公报》年度数据（2013–2017 为 74 重点城市口径，2018 年起为 338/339 城）。
           </p>
         </div>
         <div>
           <h3>反事实方法</h3>
           <p>
-            <b>反事实北京</b>＝<code>BJ<sub>基准</sub> × (对照<sub>t</sub> / 对照<sub>基准</sub>)</code>。
-            北方燃煤城市视图：以北京 2014 年均值为基准、按石家庄/邢台/太原月度均值的同期变化率外推；
-            全国均值视图：以北京 2013 年值（89.5 µg/m³）为基准、按全国均值年变化率外推。
-            指数化视图：各序列以自身基准年（城市视图 2014、全国视图 2013）月均值为 100，仅供降幅轨迹横向比较。
+            <b>反事实北京（无政策情景）</b>＝<code>BJ<sub>2013</sub> × (参照<sub>t</sub> / 参照<sub>2013</sub>)</code>。
+            参照群取几乎未实施有效管控的境外发展中亚洲大城市（新德里、拉合尔、达卡、河内，与上方 DID 图同源），其浓度长期高位徘徊；
+            故反事实北京停在 ~85 µg/m³，远高于实测北京（~29）与全国均值（~28）——两线间红色楔形即避免的污染量。
+            两个视图共用同一反事实，仅切换并列显示的区域对照（北方燃煤城市／全国均值）。
+            指数化视图：各序列以基准年（城市视图 2014、全国视图 2013）值为 100，仅供降幅轨迹横向比较。
           </p>
         </div>
       </section>
@@ -2484,52 +2485,29 @@
     function buildDomesticChart(beijingData) {
 
       // ── DATA ─────────────────────────────────────────────────
-      // Beijing annual values from the SAME source the DiD chart uses
-      // (for fallback use in CF baseline / national-view indexing)
+      // Beijing annual PM2.5 from the SAME source the DiD chart uses — this
+      // is the actual-Beijing line AND the counterfactual baseline (incl. 2013).
       const BJ_ANN_MAP = new Map(beijingData.map(d => [d.year, d.pm25]));
 
-      // Beijing monthly PM2.5 µg/m³ — AQICN daily AQI → EPA breakpoint → mean
-      // (same conversion logic as data-processor.js; 2013 not available daily)
+      // Beijing monthly PM2.5 µg/m³ (AQICN daily AQI → EPA breakpoint → mean) —
+      // lines are drawn annual, but the hover tooltip surfaces these real
+      // monthly values.  2013 has no daily data (annual seed only).
       const BJ_MON = {
-        "2014-01":115.0,"2014-02":169.3,"2014-03":106.1,"2014-04":93.4,
-        "2014-05":65.5,"2014-06":55.0,"2014-07":86.0,"2014-08":60.2,
-        "2014-09":67.2,"2014-10":137.2,"2014-11":101.1,"2014-12":75.5,
-        "2015-01":96.0,"2015-02":92.8,"2015-03":85.4,"2015-04":74.0,
-        "2015-05":56.4,"2015-06":51.3,"2015-07":52.5,"2015-08":40.3,
-        "2015-09":43.8,"2015-10":69.6,"2015-11":119.7,"2015-12":156.1,
-        "2016-01":54.5,"2016-02":42.9,"2016-03":90.5,"2016-04":60.2,
-        "2016-05":50.2,"2016-06":54.1,"2016-07":56.4,"2016-08":35.9,
-        "2016-09":47.3,"2016-10":80.0,"2016-11":97.8,"2016-12":135.2,
-        "2017-01":122.5,"2017-02":69.4,"2017-03":62.0,"2017-04":50.6,
-        "2017-05":56.1,"2017-06":37.2,"2017-07":47.5,"2017-08":30.2,
-        "2017-09":41.6,"2017-10":48.5,"2017-11":42.1,"2017-12":41.7,
-        "2018-01":29.9,"2018-02":46.9,"2018-03":83.3,"2018-04":62.2,
-        "2018-05":59.9,"2018-06":43.6,"2018-07":41.0,"2018-08":28.8,
-        "2018-09":24.8,"2018-10":42.5,"2018-11":70.1,"2018-12":38.2,
-        "2019-01":59.0,"2019-02":56.7,"2019-03":53.0,"2019-04":52.6,
-        "2019-05":49.1,"2019-06":41.1,"2019-07":38.3,"2019-08":25.4,
-        "2019-09":39.5,"2019-10":43.0,"2019-11":45.9,"2019-12":45.0,
-        "2020-01":62.6,"2020-02":60.6,"2020-03":36.1,"2020-04":34.1,
-        "2020-05":37.3,"2020-06":33.7,"2020-07":42.2,"2020-08":30.2,
-        "2020-09":26.2,"2020-10":42.4,"2020-11":39.5,"2020-12":30.0,
-        "2021-01":38.6,"2021-02":66.1,"2021-03":87.4,"2021-04":34.2,
-        "2021-05":27.5,"2021-06":20.8,"2021-07":17.0,"2021-08":20.2,
-        "2021-09":20.6,"2021-10":28.4,"2021-11":45.0,"2021-12":28.8,
-        "2022-01":40.8,"2022-02":20.2,"2022-03":36.3,"2022-04":36.6,
-        "2022-05":28.6,"2022-06":25.0,"2022-07":15.8,"2022-08":16.9,
-        "2022-09":29.6,"2022-10":40.6,"2022-11":49.1,"2022-12":23.1,
-        "2023-01":30.9,"2023-02":52.3,"2023-03":63.6,"2023-04":47.8,
-        "2023-05":33.7,"2023-06":21.9,"2023-07":21.9,"2023-08":24.3,
-        "2023-09":31.0,"2023-10":40.3,"2023-11":31.7,"2023-12":46.8,
-        "2024-01":38.5,"2024-02":40.9,"2024-03":42.7,"2024-04":44.3,
-        "2024-05":30.3,"2024-06":30.0,"2024-07":30.2,"2024-08":19.3,
-        "2024-09":19.7,"2024-10":47.6,"2024-11":45.2,"2024-12":18.1,
-        "2025-01":29.5,"2025-02":28.2,"2025-03":42.1,"2025-04":29.4,
-        "2025-05":31.9,"2025-06":24.6,"2025-07":20.2,"2025-08":17.9,
-        "2025-09":21.6,"2025-10":34.8,"2025-11":38.5,"2025-12":34.9
+        "2014-01":115.0,"2014-02":169.3,"2014-03":106.1,"2014-04":93.4,"2014-05":65.5,"2014-06":55.0,"2014-07":86.0,"2014-08":60.2,"2014-09":67.2,"2014-10":137.2,"2014-11":101.1,"2014-12":75.5,
+        "2015-01":96.0,"2015-02":92.8,"2015-03":85.4,"2015-04":74.0,"2015-05":56.4,"2015-06":51.3,"2015-07":52.5,"2015-08":40.3,"2015-09":43.8,"2015-10":69.6,"2015-11":119.7,"2015-12":156.1,
+        "2016-01":54.5,"2016-02":42.9,"2016-03":90.5,"2016-04":60.2,"2016-05":50.2,"2016-06":54.1,"2016-07":56.4,"2016-08":35.9,"2016-09":47.3,"2016-10":80.0,"2016-11":97.8,"2016-12":135.2,
+        "2017-01":122.5,"2017-02":69.4,"2017-03":62.0,"2017-04":50.6,"2017-05":56.1,"2017-06":37.2,"2017-07":47.5,"2017-08":30.2,"2017-09":41.6,"2017-10":48.5,"2017-11":42.1,"2017-12":41.7,
+        "2018-01":29.9,"2018-02":46.9,"2018-03":83.3,"2018-04":62.2,"2018-05":59.9,"2018-06":43.6,"2018-07":41.0,"2018-08":28.8,"2018-09":24.8,"2018-10":42.5,"2018-11":70.1,"2018-12":38.2,
+        "2019-01":59.0,"2019-02":56.7,"2019-03":53.0,"2019-04":52.6,"2019-05":49.1,"2019-06":41.1,"2019-07":38.3,"2019-08":25.4,"2019-09":39.5,"2019-10":43.0,"2019-11":45.9,"2019-12":45.0,
+        "2020-01":62.6,"2020-02":60.6,"2020-03":36.1,"2020-04":34.1,"2020-05":37.3,"2020-06":33.7,"2020-07":42.2,"2020-08":30.2,"2020-09":26.2,"2020-10":42.4,"2020-11":39.5,"2020-12":30.0,
+        "2021-01":38.6,"2021-02":66.1,"2021-03":87.4,"2021-04":34.2,"2021-05":27.5,"2021-06":20.8,"2021-07":17.0,"2021-08":20.2,"2021-09":20.6,"2021-10":28.4,"2021-11":45.0,"2021-12":28.8,
+        "2022-01":40.8,"2022-02":20.2,"2022-03":36.3,"2022-04":36.6,"2022-05":28.6,"2022-06":25.0,"2022-07":15.8,"2022-08":16.9,"2022-09":29.6,"2022-10":40.6,"2022-11":49.1,"2022-12":23.1,
+        "2023-01":30.9,"2023-02":52.3,"2023-03":63.6,"2023-04":47.8,"2023-05":33.7,"2023-06":21.9,"2023-07":21.9,"2023-08":24.3,"2023-09":31.0,"2023-10":40.3,"2023-11":31.7,"2023-12":46.8,
+        "2024-01":38.5,"2024-02":40.9,"2024-03":42.7,"2024-04":44.3,"2024-05":30.3,"2024-06":30.0,"2024-07":30.2,"2024-08":19.3,"2024-09":19.7,"2024-10":47.6,"2024-11":45.2,"2024-12":18.1,
+        "2025-01":29.5,"2025-02":28.2,"2025-03":42.1,"2025-04":29.4,"2025-05":31.9,"2025-06":24.6,"2025-07":20.2,"2025-08":17.9,"2025-09":21.6,"2025-10":34.8,"2025-11":38.5,"2025-12":34.9
       };
 
-      // Shijiazhuang monthly (aqistudy.cn)
+      // Shijiazhuang monthly (aqistudy.cn) — annual means derived below
       const SJZ_MON = {
         "2013-12":165,
         "2014-01":212,"2014-02":189,"2014-03":138,"2014-04":107,"2014-05":76,"2014-06":85,"2014-07":93,"2014-08":73,"2014-09":68,"2014-10":145,"2014-11":118,"2014-12":116,
@@ -2580,90 +2558,98 @@
         "2025-01":55,"2025-02":41,"2025-03":51,"2025-04":39,"2025-05":33,"2025-06":22,"2025-07":21,"2025-08":21,"2025-09":27,"2025-10":36,"2025-11":44,"2025-12":46
       };
 
-      // National annual (MEE bulletins) → expanded to monthly step
+      // National annual PM2.5 (MEE bulletins, 地级及以上城市年均)
       const NAT_ANN = {
         2013:72, 2014:64, 2015:55, 2016:47, 2017:43,
         2018:39, 2019:36, 2020:33, 2021:30, 2022:29,
         2023:32, 2024:29.3, 2025:28
       };
-      const NAT_MON = {};
-      for (let y = 2013; y <= 2025; y++) {
-        const v = NAT_ANN[y]; if (v == null) continue;
-        for (let m = 1; m <= 12; m++) {
-          NAT_MON[`${y}-${String(m).padStart(2,'0')}`] = v;
-        }
-      }
 
       // ── helpers ──────────────────────────────────────────
-      function ymToX(ym) {
-        const [y, m] = ym.split("-").map(Number);
-        return y + (m - 0.5) / 12;
-      }
-      function obj2pts(obj) {
-        return Object.entries(obj)
-          .map(([ym, v]) => ({ x: ymToX(ym), ym, v }))
-          .sort((a, b) => a.x - b.x);
-      }
-      // mean of all monthly values in a given year
-      function annualMean(obj, year) {
-        const vs = Object.entries(obj)
-          .filter(([ym]) => ym.startsWith(year + "-"))
-          .map(([, v]) => v);
-        return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+      // Annual mean from a monthly table; requires full 12-month coverage so a
+      // winter-only partial year (e.g. 2013 for some cities) cannot bias the
+      // annual mean upward.  Returns { year(Number) -> mean }.
+      function annualMeansFull(mon) {
+        const byYear = {};
+        for (const [ym, v] of Object.entries(mon)) {
+          const y = +ym.slice(0, 4);
+          (byYear[y] = byYear[y] || []).push(v);
+        }
+        const out = {};
+        for (const [y, arr] of Object.entries(byYear)) {
+          if (arr.length >= 12) out[+y] = arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+        return out;
       }
 
-      // ── Counterfactual Beijing ───────────────────────────
-      // Cities view: peer-group monthly avg → BJ baseline × (peer_t / peer_baseline)
-      function buildCF_cities() {
-        const allYMs = new Set([
-          ...Object.keys(SJZ_MON), ...Object.keys(XT_MON), ...Object.keys(TY_MON)
-        ]);
-        const peerMon = {};
-        for (const ym of allYMs) {
-          const vs = [SJZ_MON[ym], XT_MON[ym], TY_MON[ym]].filter(v => v != null);
-          if (vs.length) peerMon[ym] = vs.reduce((a, b) => a + b, 0) / vs.length;
-        }
-        const bjBase = annualMean(BJ_MON, 2014);
-        const peerBase = annualMean(peerMon, 2014);
-        const cf = {};
-        for (const [ym, v] of Object.entries(peerMon)) {
-          if (ymToX(ym) < 2014) continue; // CF only meaningful where BJ data exists
-          cf[ym] = bjBase * (v / peerBase);
-        }
-        return cf;
+      // Annual peer-city means, derived from the monthly source tables above.
+      const SJZ_ANN = annualMeansFull(SJZ_MON);
+      const XT_ANN  = annualMeansFull(XT_MON);
+      const TY_ANN  = annualMeansFull(TY_MON);
+
+      const YEAR_MIN = 2013, YEAR_MAX = 2025, X_AXIS_END = 2026;
+
+      // Annual { year:val } → sorted points [{ x, year, v }]
+      function annToPts(annObj) {
+        return Object.entries(annObj)
+          .map(([y, v]) => ({ x: +y, year: +y, v }))
+          .filter(p => p.year >= YEAR_MIN && p.year <= YEAR_MAX)
+          .sort((a, b) => a.x - b.x);
       }
-      // National view: BJ_2013 × (NAT_year / NAT_2013) → step-monthly
-      function buildCF_national() {
-        const bj2013 = BJ_ANN_MAP.get(2013) || 89.5;
-        const nat2013 = NAT_ANN[2013];
+
+      // ── Counterfactual Beijing — "无政策干预" scenario ────────────────────
+      // Anchored to a NON-improving external reference: the same overseas
+      // developing-Asia megacities the DiD chart uses (新德里/拉合尔/达卡/河内),
+      // which implemented little effective control and stayed high.  This ties
+      // the two charts together and, crucially, does NOT track the domestic
+      // control groups (北方燃煤城市 / 全国均值) — both of which improved under
+      // the same national policy and so understate Beijing's true gain.
+      //
+      //   CF(t) = BJ_2013 × ( refMean_t / refMean_2013 )
+      //
+      // The reference barely declines, so CF stays high (~85) while actual
+      // Beijing plunges to ~29 — the shaded wedge is the avoided pollution.
+      const REF_PEERS = ["lahore", "dhaka", "hanoi"];
+      function refMean(year) {
+        const delhi = (DELHI.find(d => d.year === year) || {}).pm25;
+        const vs = [delhi, ...REF_PEERS.map(k => PEER_PM25[k] && PEER_PM25[k][year])]
+          .filter(v => v != null);
+        return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+      }
+      function buildCF_noPolicy() {
+        const base = 2013;
+        const bjBase = BJ_ANN_MAP.get(base) || 89.5;
+        const refBase = refMean(base);
         const cf = {};
-        for (let y = 2013; y <= 2025; y++) {
-          const v = NAT_ANN[y]; if (v == null) continue;
-          const cfVal = bj2013 * (v / nat2013);
-          for (let m = 1; m <= 12; m++) {
-            cf[`${y}-${String(m).padStart(2,'0')}`] = cfVal;
-          }
+        if (!refBase) return cf;
+        for (let y = base; y <= YEAR_MAX; y++) {
+          const r = refMean(y);
+          if (r != null) cf[y] = bjBase * (r / refBase);
         }
         return cf;
       }
 
       // ── View configs ─────────────────────────────────────
+      // Both views share the same no-policy counterfactual; they differ only
+      // in which domestic comparison group is drawn alongside it.  peerBaseYear
+      // is the year a peer series is indexed to in 指数化 mode (coal cities lack
+      // a clean 2013, so they index to 2014; the national series uses 2013).
       const VIEW_CFG = {
         cities: {
           peers: [
-            { key:"sjz", name:"石家庄", color:"#3b82f6", data:SJZ_MON },
-            { key:"xt",  name:"邢台",   color:"#f59e0b", data:XT_MON  },
-            { key:"ty",  name:"太原",   color:"#8b5cf6", data:TY_MON  }
+            { key:"sjz", name:"石家庄", color:"#3b82f6", ann:SJZ_ANN, mon:SJZ_MON },
+            { key:"xt",  name:"邢台",   color:"#f59e0b", ann:XT_ANN,  mon:XT_MON  },
+            { key:"ty",  name:"太原",   color:"#8b5cf6", ann:TY_ANN,  mon:TY_MON  }
           ],
-          cfBuilder: buildCF_cities,
-          baseYearLabel: "2014"
+          cfBuilder: buildCF_noPolicy,
+          peerBaseYear: 2014
         },
         national: {
           peers: [
-            { key:"nat", name:"全国均值", color:"#6b7280", data:NAT_MON, isStep: true }
+            { key:"nat", name:"全国均值", color:"#6b7280", ann:NAT_ANN }
           ],
-          cfBuilder: buildCF_national,
-          baseYearLabel: "2013"
+          cfBuilder: buildCF_noPolicy,
+          peerBaseYear: 2013
         }
       };
 
@@ -2680,7 +2666,7 @@
       const yTitleEl = svg.append("text")
         .attr("x", M.left).attr("y", 24)
         .attr("class", "axis-title")
-        .text("PM₂.₅ 月均浓度（µg/m³）");
+        .text("PM₂.₅ 年均浓度（µg/m³）");
 
       const root = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
 
@@ -2688,6 +2674,7 @@
       const gGrid       = root.append("g").attr("class", "grid");
       const gXAxis      = root.append("g").attr("class", "axis x-axis").attr("transform", `translate(0,${H})`);
       const gYAxis      = root.append("g").attr("class", "axis y-axis");
+      const gGap        = root.append("path").attr("class", "gap-area");
       const gPeerLines  = root.append("g").attr("class", "peer-lines");
       const gCfLine     = root.append("path").attr("class", "line-cf").attr("fill","none");
       const gTreatGlow  = root.append("path").attr("class", "line-treat-glow").attr("fill","none");
@@ -2722,9 +2709,9 @@
         return currentMode === "indexed" && base ? (val / base) * 100 : val;
       }
 
-      // Build {x, ym, v, val} pts with optional indexing
-      function buildPts(obj, base) {
-        return obj2pts(obj).map(p => ({ ...p, val: applyIdx(p.v, base) }));
+      // Build annual {x, year, v, val} pts with optional indexing
+      function buildPts(annObj, base) {
+        return annToPts(annObj).map(p => ({ ...p, val: applyIdx(p.v, base) }));
       }
 
       function updateLegend() {
@@ -2741,12 +2728,12 @@
 
         if (currentView === "cities") {
           domSubtitle.innerHTML =
-            "处理组取北京，对照组取石家庄、邢台、太原（冀南/晋中燃煤重工业带），月度分辨率，2013–2025 年。<br>" +
-            "<b>反事实北京</b>＝按对照群同期变化率外推的北京路径（基准 2014 年均），其与实测之差为政策处理效应估计。";
+            "处理组取北京，区域对照取石家庄、邢台、太原（冀南/晋中燃煤重工业带），PM<sub>2.5</sub> 年均浓度，2013–2025 年。<br>" +
+            "<b>反事实北京（无政策情景）</b>＝以 2013 年北京为基准、按几乎未治理的境外参照城市同期轨迹外推；红色楔形＝避免的污染量。";
         } else {
           domSubtitle.innerHTML =
-            "处理组取北京（月度），对照取全国地级及以上城市 PM<sub>2.5</sub> 年均值（步进虚线）。<br>" +
-            "<b>反事实北京</b>＝以 2013 年北京浓度为基准，按全国均值年变化率外推。";
+            "处理组取北京，对照取全国地级及以上城市 PM<sub>2.5</sub> 年均值，2013–2025 年。<br>" +
+            "<b>反事实北京（无政策情景）</b>＝以 2013 年北京为基准、按几乎未治理的境外参照城市同期轨迹外推；其与实测之差即政策成效。";
         }
       }
 
@@ -2755,22 +2742,19 @@
         updateLegend();
         const cfg = VIEW_CFG[currentView];
 
-        // baseline values for indexing
-        const bjBase = annualMean(BJ_MON, 2014);
-        const cfgIndexBaseYear = currentView === "cities" ? 2014 : 2013;
-        const bjIdxBase = currentView === "cities"
-          ? annualMean(BJ_MON, 2014)
-          : (BJ_ANN_MAP.get(2013) || 89.5);
+        // 指数化模式中，所有序列都索引到该年（=100）以比较降幅轨迹
+        const idxBase = cfg.peerBaseYear;
 
-        const bjPts = buildPts(BJ_MON, bjIdxBase);
+        // Beijing actual — SAME annual source as the DiD chart (includes 2013)
+        const bjAnn = {};
+        BJ_ANN_MAP.forEach((v, y) => { if (y >= YEAR_MIN && y <= YEAR_MAX) bjAnn[y] = v; });
+        const bjPts = buildPts(bjAnn, bjAnn[idxBase]);
+
         const cfData = cfg.cfBuilder();
-        const cfPts = buildPts(cfData, bjIdxBase); // CF uses same base as BJ
-        const peerLines = cfg.peers.map(p => {
-          const peerBase = currentView === "cities"
-            ? annualMean(p.data, 2014)
-            : NAT_ANN[2013];
-          return { ...p, pts: buildPts(p.data, peerBase) };
-        });
+        const cfPts = buildPts(cfData, cfData[idxBase]);
+        const peerLines = cfg.peers.map(p =>
+          ({ ...p, pts: buildPts(p.ann, p.ann[idxBase]) })
+        );
 
         // y domain (collect all values)
         const allVals = [...bjPts.map(p=>p.val), ...cfPts.map(p=>p.val)];
@@ -2778,37 +2762,61 @@
         const yMax = d3.max(allVals) * 1.10;
         const yScale = d3.scaleLinear().domain([0, yMax]).range([H, 0]).nice();
 
+        // Y axis — ticks + padding only, NO solid axis line (user request)
         gYAxis.transition().duration(350).call(
-          d3.axisLeft(yScale).ticks(7).tickSize(5)
+          d3.axisLeft(yScale).ticks(7).tickSize(0).tickPadding(8)
         );
+        gYAxis.select(".domain").remove();
 
         yTitleEl.text(currentMode === "indexed"
-          ? `指数（${cfgIndexBaseYear} 年均 = 100）`
-          : "PM₂.₅ 月均浓度（µg/m³）");
+          ? `PM₂.₅ 指数（${idxBase} = 100）`
+          : "PM₂.₅ 年均浓度（µg/m³）");
 
         gGrid.selectAll("line").data(yScale.ticks(7)).join("line")
           .attr("x1", 0).attr("x2", W)
           .attr("y1", d => yScale(d)).attr("y2", d => yScale(d))
           .attr("stroke", "var(--rule)").attr("stroke-dasharray", "3,3");
 
+        // Trailing synthetic point at X_AXIS_END (2026) so the 2025 data point
+        // sits visually inside the chart — same trick as the DiD chart.
+        function extendForLine(pts) {
+          if (!pts.length) return pts;
+          const last = pts[pts.length - 1];
+          if (last.x >= X_AXIS_END) return pts;
+          return [...pts, { ...last, x: X_AXIS_END, _synthetic: true }];
+        }
+
         const lineGen = d3.line()
           .x(p => xScale(p.x))
-          .y(p => yScale(p.val));
-        const lineGenStep = d3.line()
-          .x(p => xScale(p.x))
           .y(p => yScale(p.val))
-          .curve(d3.curveStepAfter);
+          .curve(d3.curveMonotoneX);
 
         // Beijing thick + glow
-        gTreatGlow.datum(bjPts).attr("stroke", "#c44536")
+        gTreatGlow.datum(extendForLine(bjPts)).attr("stroke", "#c44536")
           .transition().duration(350).attr("d", lineGen);
-        gTreatLine.datum(bjPts).attr("stroke", "#c44536")
+        gTreatLine.datum(extendForLine(bjPts)).attr("stroke", "#c44536")
           .transition().duration(350).attr("d", lineGen);
 
         // Counterfactual Beijing — dashed red
-        gCfLine.datum(cfPts).attr("stroke", "#c44536")
-          .transition().duration(350)
-          .attr("d", currentView === "national" ? lineGenStep(cfPts) : lineGen(cfPts));
+        gCfLine.datum(extendForLine(cfPts)).attr("stroke", "#c44536")
+          .transition().duration(350).attr("d", lineGen);
+
+        // Treatment-effect wedge — shaded area between actual Beijing (y1) and
+        // the no-policy counterfactual (y0).  Same visual as the DiD chart.
+        const gapPts = extendForLine(
+          bjPts.filter(p => cfData[p.year] != null).map(p => ({
+            x: p.x, year: p.year,
+            cfVal: applyIdx(cfData[p.year], cfData[idxBase]),
+            bjVal: p.val
+          }))
+        );
+        const areaGen = d3.area()
+          .x(p => xScale(p.x))
+          .y0(p => yScale(p.cfVal))
+          .y1(p => yScale(p.bjVal))
+          .curve(d3.curveMonotoneX);
+        gGap.datum(gapPts).transition().duration(350)
+          .attr("d", areaGen).attr("fill", "#c44536");
 
         // Peer lines
         const peerSel = gPeerLines.selectAll("path.line-peer").data(peerLines, d => d.key);
@@ -2818,7 +2826,7 @@
         peerSel.merge(peerEnter)
           .attr("stroke", d => d.color)
           .transition().duration(350)
-          .attr("d", d => d.isStep ? lineGenStep(d.pts) : lineGen(d.pts));
+          .attr("d", d => lineGen(extendForLine(d.pts)));
 
         // ── End-edge dots + labels with collision avoidance ──
         const endItems = [];
@@ -2887,7 +2895,10 @@
           .style("font-style", d => d.isCF ? "italic" : "normal")
           .text(d => `${d.name} ${d.pt.val.toFixed(1)}`);
 
-        // ── Hover overlay (monthly snap) ──
+        // ── Hover overlay (month-level) ──
+        // Lines are annual, but the tooltip surfaces REAL monthly values where
+        // we have them (北京 / 北方燃煤城市).  反事实 is a modeled annual
+        // scenario and 全国均值 is annual-only, so those show the year value.
         root.selectAll(".dom-ov").remove();
         root.append("rect")
           .attr("class", "dom-ov")
@@ -2896,35 +2907,39 @@
           .on("mousemove", function(event) {
             const [mx] = d3.pointer(event, this);
             const xRaw = xScale.invert(mx);
-            if (xRaw < X_MIN || xRaw > X_MAX) {
-              hRule.style("opacity", 0);
-              domTip.classList.remove("is-visible");
-              return;
-            }
-            // snap to nearest month center
-            const year  = Math.floor(xRaw);
-            const monIdx = Math.round((xRaw - year) * 12 + 0.5);
-            const dispYear = monIdx < 1 ? year - 1 : (monIdx > 12 ? year + 1 : year);
-            const dispMon  = ((monIdx - 1 + 12) % 12) + 1;
-            const ymKey = `${dispYear}-${String(dispMon).padStart(2,'0')}`;
-            const snapX = xScale(ymToX(ymKey));
+            let year = Math.floor(xRaw);
+            if (year < YEAR_MIN) year = YEAR_MIN;
+            if (year > YEAR_MAX) year = YEAR_MAX;
+            const month = Math.min(12, Math.max(1, Math.floor((xRaw - Math.floor(xRaw)) * 12) + 1));
+            const ym = `${year}-${String(month).padStart(2,'0')}`;
+            const snapX = xScale(year + (month - 0.5) / 12);
             hRule.attr("x1", snapX).attr("x2", snapX).style("opacity", 1);
 
+            const fmt = (v, base) => applyIdx(v, base).toFixed(1);
             const rows = [];
-            const bjV = BJ_MON[ymKey];
-            if (bjV != null) rows.push(
-              `<span style="color:#c44536">●</span> 北京&nbsp;<b>${applyIdx(bjV, bjIdxBase).toFixed(1)}</b>`
+
+            // 北京 — real monthly; 2013 has no daily data → annual seed
+            const bjMon = BJ_MON[ym];
+            const bjShow = bjMon != null ? bjMon : bjAnn[year];
+            const bjIsMon = bjMon != null;
+            if (bjShow != null) rows.push(
+              `<span style="color:#c44536">●</span> 北京&nbsp;<b>${fmt(bjShow, bjAnn[idxBase])}</b>` +
+              (bjIsMon ? "" : `<span style="opacity:0.5">·年</span>`)
             );
-            const cfV = cfData[ymKey];
+            // 反事实 — modeled annual scenario (constant within the year)
+            const cfV = cfData[year];
             if (cfV != null) rows.push(
-              `<span style="color:#c44536;opacity:0.7">– –</span> 反事实&nbsp;<b style="font-style:italic">${applyIdx(cfV, bjIdxBase).toFixed(1)}</b>`
+              `<span style="color:#c44536;opacity:0.7">– –</span> 反事实&nbsp;` +
+              `<b style="font-style:italic">${fmt(cfV, cfData[idxBase])}</b><span style="opacity:0.5">·年</span>`
             );
+            // peers — monthly where available, else annual
             peerLines.forEach(s => {
-              const v = s.data[ymKey];
+              const mv = s.mon ? s.mon[ym] : null;
+              const v = mv != null ? mv : s.ann[year];
               if (v == null) return;
-              const base = currentView === "cities" ? annualMean(s.data, 2014) : NAT_ANN[2013];
               rows.push(
-                `<span style="color:${s.color}">●</span> ${s.name}&nbsp;<b>${applyIdx(v, base).toFixed(1)}</b>`
+                `<span style="color:${s.color}">●</span> ${s.name}&nbsp;<b>${fmt(v, s.ann[idxBase])}</b>` +
+                (mv != null ? "" : `<span style="opacity:0.5">·年</span>`)
               );
             });
 
@@ -2934,8 +2949,7 @@
             }
 
             domTip.innerHTML =
-              `<div class="tip-date">${dispYear}-${String(dispMon).padStart(2,'0')}</div>`
-              + rows.join("<br>");
+              `<div class="tip-date">${year} 年 ${month} 月</div>` + rows.join("<br>");
             domTip.classList.add("is-visible");
             domTip.style.left = (event.clientX + 14) + "px";
             domTip.style.top  = (event.clientY - 10) + "px";
