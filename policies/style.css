@@ -55,7 +55,7 @@ p {
 }
 
 h1 {
-  font-size: clamp(26px, 3vw, 40px);
+  font-size: 36px;
   line-height: 1.12;
   letter-spacing: 0;
 }
@@ -296,6 +296,10 @@ h2 {
   .app-shell {
     width: min(100vw - 20px, 760px);
     padding-top: 14px;
+  }
+
+  h1 {
+    font-size: 28px;
   }
 
   .app-header,

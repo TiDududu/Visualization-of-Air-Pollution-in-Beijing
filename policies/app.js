@@ -1,5 +1,5 @@
 const EXCEL_FILE = "空气污染治理政策汇总.xlsx";
-const COVER_DIR = "政策封面";
+const COVER_DIR = "../政策封面";
 const PROMPT_TEXT = "点击政策名称或图片可查看具体信息";
 
 const statusEl = document.querySelector("#status");
@@ -55,13 +55,21 @@ async function init() {
 }
 
 async function loadWorkbook() {
+  if (!window.XLSX) {
+    throw new Error("XLSX 依赖未加载，请检查网络连接或本地依赖缓存。");
+  }
+
   const response = await fetch(encodeURI(EXCEL_FILE));
   if (!response.ok) {
-    throw new Error(`无法读取 ${EXCEL_FILE}，请用 Live Server 打开页面。`);
+    throw new Error(`无法读取 ${EXCEL_FILE}，请从仓库根目录启动本地 HTTP 服务后访问 /policies/。`);
   }
 
   const buffer = await response.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+  if (!workbook.SheetNames.length) {
+    throw new Error("政策工作簿中没有可读取的工作表。");
+  }
+
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   return XLSX.utils.sheet_to_json(sheet, {
     defval: "",

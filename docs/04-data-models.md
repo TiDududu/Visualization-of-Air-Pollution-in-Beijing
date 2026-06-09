@@ -1,12 +1,27 @@
 # Data Models
 
-## 1. Raw Data (beijing-air-quality.csv)
-- Format: CSV
-- Columns: `date`, `pm25`, `pm10`, `o3`, `no2`, `so2`, `co` (note: column headers have leading spaces).
-- Values: US-AQI index values.
+## Beijing source data
 
-## 2. Processed Annual Data
-The `data-processor.js` module reads the CSV and produces an array of objects representing the annual arithmetic mean of the concentrations:
+- File: `data/processed/beijing-air-quality.csv`
+- Format: CSV
+- Columns: `date`, `pm25`, `pm10`, `o3`, `no2`, `so2`, `co`
+- Values: US-AQI index values
+
+## Delhi comparison data
+
+- Files: `data/raw/delhi-city_day.csv`, `data/raw/delhi_ncr_aqi_dataset.csv`
+- Purpose: audit trail for the New Delhi control series used in the DiD comparison.
+- Scope: the visualization uses curated annual values, while the raw files remain in the repository for reproducibility and review.
+
+## Archive artifacts
+
+- Files: `air_pollution.zip`, `project_time.zip`
+- Purpose: submitted project archives kept as provenance artifacts.
+- Rule: these ZIP files are not generated clutter and should stay versioned unless the submission policy changes.
+
+## Processed annual data
+
+`scripts/data-processor.js` reads the CSV and produces annual concentration means:
 
 ```javascript
 [
@@ -17,14 +32,15 @@ The `data-processor.js` module reads the CSV and produces an array of objects re
     so2: 26.5,
     no2: 56.0
   },
-  // ... up to 2025
+  // ... through 2025, with 2026 used only as a partial interpolation endpoint
 ]
 ```
 
-## 3. Data Flow
-1. `d3.csv()` fetches `beijing-air-quality.csv`.
-2. Row parser cleans leading spaces from headers and values.
-3. Filter removes rows outside the 2013-2025 range.
-4. `d3.rollups` groups by year.
-5. Within each year, daily AQI values are converted to µg/m³ (using `aqiToConcentration`), then averaged.
-6. The 2013 object is seeded with historically accurate concentration values, as the CSV only contains a single day of data for 2013.
+## Data flow
+
+1. `d3.csv()` fetches `data/processed/beijing-air-quality.csv`.
+2. The row parser trims headers and values.
+3. Rows outside 2013-2026 are ignored.
+4. `d3.rollups` groups records by year.
+5. Daily AQI values are converted to concentrations, then averaged.
+6. 2013 is overwritten with documented annual means because the CSV has only one record for that year.

@@ -1,6 +1,8 @@
-data/
+# local scratch outputs
+data/tmp/
+data/cache/
 
-# raw per-day CSVs from AQICN — superseded by consolidated beijing-air-quality.csv
+# raw per-day CSV folders from AQICN; superseded by data/processed/beijing-air-quality.csv
 beijing_*/
 beijing_pm25_*/
 

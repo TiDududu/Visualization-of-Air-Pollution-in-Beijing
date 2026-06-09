@@ -1,37 +1,26 @@
-# Requirements - Bar Chart Race (Beijing Air Quality)
+# Requirements
 
-## 1. Project Objective
-Create a "Bar Chart Race" visualization showing the annual average concentration of four pollutants (PM2.5, PM10, SO2, NO2) in Beijing from 2013 to 2026.
+## Objective
 
-## 2. Key Features
-### 2.1 Static Bar Chart (40 pts)
-- [ ] Read and process data from `beijing-air-quality.csv`.
-- [ ] Render a horizontal bar chart for a given year (e.g., 2013).
-- [ ] Sort pollutants by concentration (high to low, top to bottom).
-- [ ] Distinct, colorblind-friendly colors (bound to pollutant, not rank).
-- [ ] Labels (name and value) on/next to bars.
-- [ ] Axes: X-axis (concentration with μg/m³ unit), Y-axis (rank or name).
-- [ ] Title (centered) and prominent Year Indicator (e.g., bottom-right).
+Show how Beijing air pollution changed from 2013 to 2025 and explain how much of the PM2.5 decline can plausibly be attributed to policy intervention.
 
-### 2.2 Annual Transition Animation (40 pts)
-- [ ] Smooth interpolation between years (1-2s per year).
-- [ ] Bars move smoothly when ranks change (no jumping).
-- [ ] Real dynamic animation (D3 transition or `requestAnimationFrame`).
-- [ ] X-axis max value handles transitions (fixed or adaptive).
-- [ ] Year indicator updates continuously.
+## Main visualization
 
-### 2.3 Interaction and Control (20 pts)
-- [ ] Play/Pause button.
-- [ ] Timeline scrubber (optional but recommended).
-- [ ] Handle end of animation (stop/loop/replay).
-- [ ] Tooltip on hover: show pollutant name, year, and specific value.
+- [x] Read and process `data/processed/beijing-air-quality.csv` in the browser.
+- [x] Convert US-AQI values to pollutant concentrations before annual aggregation.
+- [x] Render a bar-chart race for PM2.5, PM10, SO2, and NO2.
+- [x] Keep pollutant colors stable across ranking changes.
+- [x] Provide play/pause, replay, scrubber, year readout, and hover tooltip.
+- [x] Start the race paused so readers choose when to play the animation.
 
-## 3. Technical Constraints
-- [ ] Technologies: HTML, Vanilla CSS, JavaScript (D3.js recommended).
-- [ ] Prohibited: `matplotlib`, `seaborn`, static image splicing (GIFs/Videos).
-- [ ] Data source: `beijing-air-quality.csv`.
+## Comparison views
 
-## 4. Current Issues & Observations
-- **Data Gap**: 2013 data in CSV is incomplete (only 1 day, missing PM2.5).
-- **Unit Mismatch**: CSV data is US-AQI, but UI requires μg/m³.
-- **Hardcoding**: Current implementation uses a hardcoded `RAW` array.
+- [x] Add domestic PM2.5 reference lines for northern coal cities and national averages.
+- [x] Add a DiD-style counterfactual view with Beijing, peer cities, and estimated policy effect.
+- [x] Document source limitations directly in the page notes, especially estimated peer-city tails.
+
+## Data notes
+
+- The Beijing CSV contains AQI values rather than concentrations.
+- 2013 Beijing data is not representative, so the page seeds that year with documented annual means.
+- Delhi raw files are kept under `data/raw/` for auditability, while the page uses curated annual values.
