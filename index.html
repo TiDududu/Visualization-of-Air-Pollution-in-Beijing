@@ -1,18 +1,1398 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>北京空气污染可视化</title>
-  <meta http-equiv="refresh" content="0; url=bar-chart-race.html">
-  <link rel="canonical" href="bar-chart-race.html">
-</head>
-<body>
-  <p>正在打开北京空气污染可视化页面。若未自动跳转，请访问
-    <a href="bar-chart-race.html">bar-chart-race.html</a>。
-  </p>
-  <script>
-    window.location.replace("bar-chart-race.html");
-  </script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>北京市空气质量分析</title>
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        color-scheme: light;
+        --pollution: #8a6a3d;
+        --dust: #c2a060;
+        --haze: #3a3a3a;
+        --govern-blue: #4fa3ff;
+        --sky-blue: #9fdcff;
+        --fresh-blue: #dff4ff;
+        --white: #f5f7fa;
+        --ink: #17211b;
+        --muted: #5d6c67;
+        --line: #d6e2df;
+        --panel: #ffffff;
+        --accent: #ffd166;
+        --red: #b12f1f;
+        --green: #2f8f73;
+        --clear: 0;
+        --shade-top: 0.88;
+        --shade-mid: 0.78;
+        --shade-sky: 0.22;
+        --bg-opacity: 0.04;
+        --bg-blur: 10px;
+        --bg-saturate: 0.78;
+        --bg-scale: 1.035;
+        --map-opacity: 0;
+        --photo-opacity: 0;
+        --photo-blur: 8px;
+        --sky-opacity: 0;
+        --skyline-opacity: 0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #eef7f9;
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .opening {
+        position: relative;
+        min-height: 100svh;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+          linear-gradient(rgba(138, 106, 61, 0.22), rgba(138, 106, 61, 0.22)),
+          url("assets/temple-of-heaven.jpg") center / cover no-repeat;
+      }
+
+      .opening::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        height: 55vh;
+        background:
+          linear-gradient(180deg, rgba(52, 54, 56, 0) 0%, rgba(52, 54, 56, 0.34) 16%, rgba(52, 54, 56, 0.68) 30%, rgba(52, 54, 56, 0.68) 100%);
+        opacity: 0;
+        transition: opacity 700ms ease;
+        pointer-events: none;
+      }
+
+      .opening.is-timeline-ready::after {
+        opacity: 1;
+      }
+
+      .opening-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        opacity: var(--bg-opacity);
+        filter: blur(var(--bg-blur)) saturate(var(--bg-saturate));
+        transform: scale(var(--bg-scale));
+        transition: opacity 400ms ease, filter 400ms ease, transform 400ms ease;
+      }
+
+      .sky-field {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 78% 16%, rgba(255, 255, 255, 0.78), transparent 11%),
+          radial-gradient(circle at 18% 26%, rgba(79, 163, 255, 0.22), transparent 17%),
+          linear-gradient(180deg, rgba(159, 220, 255, 0.88) 0%, rgba(223, 244, 255, 0.72) 54%, rgba(241, 247, 242, 0.95) 100%);
+        opacity: var(--sky-opacity);
+      }
+
+      .photo-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(8, 12, 15, 0.22), rgba(8, 12, 15, 0.06)),
+          url("assets/temple-of-heaven.jpg") center / cover no-repeat;
+        opacity: var(--photo-opacity);
+        filter: blur(var(--photo-blur)) saturate(1.08);
+        transform: scale(1.02);
+      }
+
+      .map-visual {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        width: min(760px, 84vw);
+        height: auto;
+        transform: translate(-50%, -50%);
+        color: rgba(255, 255, 255, 0.66);
+        opacity: var(--map-opacity);
+      }
+
+      .map-visual path.region {
+        fill: rgba(245, 250, 252, 0.1);
+        stroke: rgba(255, 255, 255, 0.42);
+        stroke-width: 2;
+      }
+
+      .city-silhouette {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 28vh;
+        min-height: 190px;
+        opacity: var(--skyline-opacity);
+        background:
+          linear-gradient(to top, rgba(12, 21, 26, 0.68), rgba(12, 21, 26, 0.1) 72%, transparent),
+          linear-gradient(90deg, transparent 0 4%, rgba(20, 30, 34, 0.72) 4% 8%, transparent 8% 11%, rgba(20, 30, 34, 0.64) 11% 15%, transparent 15% 20%, rgba(20, 30, 34, 0.78) 20% 26%, transparent 26% 30%, rgba(20, 30, 34, 0.66) 30% 34%, transparent 34% 38%, rgba(20, 30, 34, 0.76) 38% 45%, transparent 45% 50%, rgba(20, 30, 34, 0.66) 50% 55%, transparent 55% 59%, rgba(20, 30, 34, 0.78) 59% 66%, transparent 66% 71%, rgba(20, 30, 34, 0.7) 71% 77%, transparent 77% 81%, rgba(20, 30, 34, 0.74) 81% 87%, transparent 87% 100%);
+        background-size: 100% 100%, 100% 58%;
+        background-repeat: no-repeat;
+        background-position: bottom;
+      }
+
+      #dustCanvas {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+      }
+
+      .opening-content {
+        position: relative;
+        z-index: 2;
+        width: min(1180px, calc(100vw - 40px));
+        min-height: 100svh;
+        margin: 0 auto;
+        padding: 42px 0 5.5svh;
+        display: grid;
+        place-items: end center;
+        pointer-events: none;
+      }
+
+      .timeline-intro {
+        position: relative;
+        isolation: isolate;
+        width: min(1040px, 100%);
+        color: rgba(255, 255, 255, 0.94);
+        text-align: center;
+        text-shadow: 0 12px 32px rgba(0, 0, 0, 0.56);
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 800ms ease, transform 800ms ease;
+        pointer-events: none;
+      }
+
+      .opening.is-timeline-ready .timeline-intro {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .intro-typewriter {
+        position: absolute;
+        top: 66%;
+        left: 50%;
+        width: min(820px, calc(100vw - 40px));
+        min-height: 150px;
+        color: rgba(255, 255, 255, 0.94);
+        text-align: center;
+        text-shadow: 0 12px 32px rgba(0, 0, 0, 0.62);
+        transform: translate(-50%, -50%);
+        transition: opacity 700ms ease, filter 700ms ease;
+      }
+
+      .intro-typewriter.is-hidden {
+        opacity: 0;
+        filter: blur(8px);
+      }
+
+      .intro-line {
+        position: relative;
+        margin: 0;
+        font-size: 35px;
+        line-height: 1.6;
+        font-weight: 750;
+      }
+
+      .intro-line + .intro-line {
+        margin-top: 12px;
+      }
+
+      #introLineTwo {
+        font-size: 41px;
+      }
+
+      .typing-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        margin-left: 5px;
+        vertical-align: -0.16em;
+        background: rgba(255, 255, 255, 0.88);
+        animation: cursorBlink 850ms steps(2, end) infinite;
+      }
+
+      .text-emphasis,
+      .zero-emphasis {
+        color: #ffffff;
+        display: inline-block;
+        margin: 0 0.16em;
+        font-size: 1.35em;
+        font-weight: 950;
+        text-shadow: 0 0 28px rgba(255, 255, 255, 0.74);
+      }
+
+      .policy-stage {
+        min-height: 170px;
+        display: grid;
+        grid-template-rows: 1fr 24px;
+        align-items: end;
+        gap: 12px;
+        text-align: center;
+        transform: translateY(34px);
+      }
+
+      .policy-year {
+        display: none;
+      }
+
+      .policy-title {
+        margin: 0;
+        font-size: 38px;
+        line-height: 1.28;
+        letter-spacing: 0;
+        text-align: center;
+        align-self: end;
+        white-space: nowrap;
+      }
+
+      .policy-title.is-long {
+        font-size: 34px;
+      }
+
+      .policy-title.is-extra-long {
+        font-size: 30px;
+      }
+
+      .policy-subtitle {
+        margin: 0;
+        color: rgba(245, 247, 250, 0.7);
+        font-size: 17px;
+        line-height: 26px;
+      }
+
+      .timeline-control {
+        position: relative;
+        margin: 58px auto 0;
+        width: min(980px, 100%);
+        padding: 22px 0 18px;
+      }
+
+      .timeline-track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 30px;
+        height: 4px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.28);
+        overflow: hidden;
+      }
+
+      .timeline-progress {
+        width: 0;
+        height: 100%;
+        background: var(--accent);
+      }
+
+      .timeline-thumb {
+        position: absolute;
+        left: 0;
+        top: 32px;
+        z-index: 2;
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(255, 255, 255, 0.96);
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.2) 28%, transparent 30%),
+          var(--accent);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), 0 0 28px rgba(255, 209, 102, 0.58);
+        transform: translate(-50%, -50%);
+        transition: opacity 360ms ease, visibility 360ms ease;
+        pointer-events: none;
+      }
+
+      .policy-marker {
+        position: absolute;
+        top: 7px;
+        z-index: 1;
+        width: 42px;
+        height: 58px;
+        border: 0;
+        padding: 0;
+        appearance: none;
+        background: transparent;
+        color: inherit;
+        cursor: default;
+        pointer-events: none;
+        transform: translateX(-50%);
+      }
+
+      .policy-marker::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 17px;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.62);
+        border-radius: 50%;
+        background: rgba(255, 209, 102, 0.22);
+        transform: translate(-50%, 0);
+        transition: width 180ms ease, height 180ms ease, box-shadow 180ms ease;
+      }
+
+      .policy-marker.is-active::before {
+        border-color: #ffffff;
+        background: var(--accent);
+        box-shadow: 0 0 20px rgba(255, 209, 102, 0.72);
+      }
+
+      .opening.is-complete .policy-marker {
+        z-index: 4;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+
+      .opening.is-complete .policy-marker:hover::before,
+      .opening.is-complete .policy-marker:focus-visible::before {
+        width: 20px;
+        height: 20px;
+        box-shadow: 0 0 28px rgba(255, 209, 102, 0.9);
+      }
+
+      .marker-date {
+        position: absolute;
+        left: 50%;
+        top: 42px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+        transform: translateX(-50%);
+      }
+
+      .timeline-slider {
+        appearance: none;
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 56px;
+        margin: 0;
+        opacity: 0.001;
+        background: transparent;
+        cursor: grab;
+        transition: opacity 360ms ease, visibility 360ms ease;
+        pointer-events: auto;
+      }
+
+      .timeline-slider:active {
+        cursor: grabbing;
+      }
+
+      .timeline-slider::-webkit-slider-runnable-track {
+        height: 56px;
+        background: transparent;
+      }
+
+      .timeline-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 50%;
+        background: #ffffff;
+      }
+
+      .timeline-slider::-moz-range-track {
+        height: 56px;
+        background: transparent;
+        border: 0;
+      }
+
+      .timeline-slider::-moz-range-thumb {
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 50%;
+        background: #ffffff;
+      }
+
+      .opening-start {
+        position: absolute;
+        left: 50%;
+        bottom: 3.2svh;
+        z-index: 3;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 18px;
+        font-weight: 850;
+        letter-spacing: 0;
+        text-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+        opacity: 0;
+        visibility: hidden;
+        transform: translate(-50%, 12px);
+        transition: opacity 520ms ease, transform 520ms ease, visibility 520ms ease;
+        pointer-events: none;
+        cursor: pointer;
+      }
+
+      .opening.is-timeline-ready:not(.is-autoplay-started):not(.is-complete) .opening-start {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+        animation: softBlink 3s ease-in-out infinite;
+        pointer-events: auto;
+      }
+
+      .opening-start:hover,
+      .opening-start:focus-visible {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      @keyframes cursorBlink {
+        0%, 48% { opacity: 1; }
+        49%, 100% { opacity: 0; }
+      }
+
+      @keyframes softBlink {
+        0%, 100% { opacity: 0.48; }
+        50% { opacity: 0.92; }
+      }
+
+      .main-content {
+        background:
+          linear-gradient(180deg, #eef8fb 0%, #f5f8f3 42%, #ffffff 100%);
+      }
+
+      .content-section {
+        width: min(1180px, calc(100vw - 40px));
+        margin: 0 auto;
+        padding: 82px 0;
+      }
+
+      .content-section + .content-section {
+        border-top: 1px solid var(--line);
+      }
+
+      .section-header {
+        margin-bottom: 26px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.24;
+      }
+
+      .section-header p {
+        margin: 10px 0 0;
+        max-width: 730px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .ending {
+        min-height: 420px;
+        display: grid;
+        place-items: center;
+        padding: 80px 20px;
+        color: #ffffff;
+        text-align: center;
+        background:
+          radial-gradient(circle at 22% 18%, rgba(255, 209, 102, 0.42), transparent 18%),
+          radial-gradient(circle at 78% 22%, rgba(79, 163, 255, 0.4), transparent 20%),
+          linear-gradient(135deg, #0f2c3a 0%, #317b8e 54%, #9fdcff 100%);
+      }
+
+      .ending h2 {
+        margin: 0 0 16px;
+        font-size: 40px;
+        line-height: 1.2;
+      }
+
+      .ending p {
+        margin: 0;
+        max-width: 720px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 19px;
+        line-height: 1.75;
+      }
+
+      @media (max-width: 920px) {
+        .opening-content {
+          width: min(100% - 28px, 720px);
+          padding: 36px 0 6.5svh;
+        }
+
+        .policy-title {
+          font-size: 40px;
+        }
+
+        .policy-title.is-long {
+          font-size: 31px;
+        }
+
+        .policy-title.is-extra-long {
+          font-size: 27px;
+        }
+
+        .intro-line {
+          font-size: 29px;
+        }
+
+        #introLineTwo {
+          font-size: 33px;
+        }
+
+        .intro-typewriter {
+          top: 64%;
+        }
+
+        .opening-start {
+          bottom: 3.6svh;
+        }
+
+        .policy-stage {
+          min-height: 180px;
+        }
+
+        .content-section {
+          width: min(100% - 28px, 720px);
+          padding: 58px 0;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .opening {
+          min-height: 112svh;
+        }
+
+        .policy-title {
+          font-size: 26px;
+        }
+
+        .policy-title.is-long {
+          font-size: 21px;
+        }
+
+        .policy-title.is-extra-long {
+          font-size: 17px;
+        }
+
+        .intro-line {
+          font-size: 25px;
+        }
+
+        #introLineTwo {
+          font-size: 27px;
+        }
+
+        .policy-year {
+          font-size: 14px;
+        }
+
+        .section-header h2 {
+          font-size: 27px;
+        }
+
+      }
+
+      .analysis-shell {
+        min-height: 100svh;
+        background: #f6f7f9;
+      }
+
+:root {
+      color-scheme: light;
+      --nav-bg: rgba(255, 255, 255, 0.94);
+      --nav-ink: #172033;
+      --nav-muted: #687386;
+      --nav-accent: #2563eb;
+      --nav-rule: #e5e9f0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    .site-header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      min-height: 68px;
+      align-items: stretch;
+      justify-content: center;
+      padding: 0 24px;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--nav-rule);
+      box-shadow: 0 4px 18px rgba(23, 32, 51, 0.05);
+      backdrop-filter: blur(14px);
+    }
+
+    .site-nav {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .site-brand {
+      flex: 0 0 auto;
+      color: var(--nav-ink);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-self: stretch;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .nav-tab {
+      position: relative;
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      padding: 0 18px;
+      border: 0;
+      background: transparent;
+      color: var(--nav-muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: color 160ms ease, background 160ms ease;
+    }
+
+    .nav-tab::after {
+      content: "";
+      position: absolute;
+      right: 22px;
+      bottom: -1px;
+      left: 22px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--nav-accent);
+      transform: scaleX(0);
+      transition: transform 180ms ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--nav-ink);
+      background: rgba(37, 99, 235, 0.035);
+    }
+
+    .nav-tab[aria-selected="true"] {
+      color: var(--nav-accent);
+    }
+
+    .nav-tab[aria-selected="true"]::after {
+      transform: scaleX(1);
+    }
+
+    .nav-tab:focus-visible {
+      outline: 2px solid var(--nav-accent);
+      outline-offset: -5px;
+    }
+
+    .page-stage {
+      position: relative;
+      height: calc(100svh - 68px);
+    }
+
+    .page-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    .page-frame[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .site-header {
+        min-height: 58px;
+        padding: 0 8px;
+      }
+
+      .site-nav {
+        gap: 10px;
+      }
+
+      .site-brand {
+        font-size: 13px;
+      }
+
+      .nav-tabs {
+        min-width: 0;
+        overflow-x: auto;
+      }
+
+      .nav-tab {
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .nav-tab::after {
+        right: 8px;
+        left: 8px;
+      }
+
+      .page-stage {
+        height: calc(100svh - 58px);
+      }
+    }
+    </style>
+  </head>
+  <body>
+<section id="opening" class="opening" aria-label="北京空气质量与政策治理开场动画">
+      <div class="opening-bg" aria-hidden="true">
+        <div class="photo-bg"></div>
+        <div class="sky-field"></div>
+        <svg class="map-visual" viewBox="0 0 720 520" role="img" aria-label="北京地图轮廓">
+          <path class="region" d="M225 64 327 38 455 68 574 149 613 254 566 365 472 464 337 491 214 438 123 338 105 213Z"></path>
+          <path class="region" d="M282 165 394 135 486 195 494 296 422 364 307 352 238 272Z"></path>
+        </svg>
+        <div class="city-silhouette"></div>
+      </div>
+
+      <canvas id="dustCanvas" aria-hidden="true"></canvas>
+
+      <div class="opening-content">
+        <div id="introTypewriter" class="intro-typewriter" aria-live="polite">
+          <p id="introLineOne" class="intro-line"></p>
+          <p id="introLineTwo" class="intro-line"></p>
+        </div>
+        <div class="timeline-intro">
+          <div class="policy-stage" aria-live="polite">
+            <div id="policyYear" class="policy-year">2011</div>
+            <h1 id="policyTitle" class="policy-title">北京空气质量与政策治理</h1>
+            <p id="policySubtitle" class="policy-subtitle"></p>
+          </div>
+          <div class="timeline-control">
+            <div class="timeline-track">
+              <div id="timelineProgress" class="timeline-progress"></div>
+            </div>
+            <div id="timelineThumb" class="timeline-thumb" aria-hidden="true"></div>
+            <div id="policyMarkers"></div>
+            <input id="policySlider" class="timeline-slider" type="range" min="2011" max="2026" step="0.01" value="2011" aria-label="政策治理时间轴">
+          </div>
+        </div>
+        <button id="openingStart" class="opening-start" type="button">走进北京空气治理</button>
+      </div>
+    </section>
+
+    <div id="analysis-pages" class="analysis-shell">
+      <header class="site-header">
+          <nav class="site-nav" aria-label="空气质量分析栏目">
+            <div class="site-brand" id="siteBrand">北京市空气质量与政策可视化</div>
+            <div class="nav-tabs" role="tablist">
+              <button
+                class="nav-tab"
+                id="tab-overview"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="page-overview"
+                data-page="overview"
+              >
+                北京市空气质量概览
+              </button>
+              <button
+                class="nav-tab"
+                id="tab-measures"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="page-measures"
+                data-page="measures"
+              >
+                政策措施分析
+              </button>
+              <button
+                class="nav-tab"
+                id="tab-policy"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="page-policy"
+                data-page="policy"
+              >
+                政策效果评估
+              </button>
+              <button
+                class="nav-tab"
+                id="tab-comparison"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="page-comparison"
+                data-page="comparison"
+              >
+                国内与全球结果对照
+              </button>
+            </div>
+          </nav>
+        </header>
+      
+        <main class="page-stage">
+          <iframe
+            class="page-frame"
+            id="page-overview"
+            src="Project%20Milana/index.html?v=20260610-project-milana-root"
+            title="北京市空气质量概览"
+            role="tabpanel"
+            aria-labelledby="tab-overview"
+          ></iframe>
+          <iframe
+            class="page-frame"
+            id="page-measures"
+            title="政策措施分析"
+            role="tabpanel"
+            aria-labelledby="tab-measures"
+            data-src="project_policy/index.html"
+            hidden
+          ></iframe>
+          <iframe
+            class="page-frame"
+            id="page-policy"
+            title="政策效果评估"
+            role="tabpanel"
+            aria-labelledby="tab-policy"
+            data-src="project_time/policy-evaluation.html?v=20260610-policy-copy-cleanup"
+            hidden
+          ></iframe>
+          <iframe
+            class="page-frame"
+            id="page-comparison"
+            title="国内与全球结果对照"
+            role="tabpanel"
+            aria-labelledby="tab-comparison"
+            data-src="project_chart/bar-chart-race.html?v=20260610-shell-root"
+            hidden
+          ></iframe>
+        </main>
+    </div>
+
+    <script>
+      const opening = document.querySelector("#opening");
+            const canvas = document.querySelector("#dustCanvas");
+            const ctx = canvas.getContext("2d", { alpha: true });
+            const introTypewriter = document.querySelector("#introTypewriter");
+            const introLineOne = document.querySelector("#introLineOne");
+            const introLineTwo = document.querySelector("#introLineTwo");
+            const policySlider = document.querySelector("#policySlider");
+            const policyYear = document.querySelector("#policyYear");
+            const policyTitle = document.querySelector("#policyTitle");
+            const policySubtitle = document.querySelector("#policySubtitle");
+            const policyMarkers = document.querySelector("#policyMarkers");
+            const timelineProgress = document.querySelector("#timelineProgress");
+            const timelineThumb = document.querySelector("#timelineThumb");
+            const openingStart = document.querySelector("#openingStart");
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const startYear = 2011;
+            const endYear = 2026;
+            const policies = [
+              { date: "2011-07-01", title: "北京市清洁空气行动计划（2011-2015 年大气污染控制措施）" },
+              { date: "2012-08-01", title: "北京市工业大气污染治理行动计划（2012-2020 年）" },
+              { date: "2012-09-01", title: "加快压减燃煤促进空气质量改善工作方案" },
+              { date: "2012-09-01", title: "北京市2012—2020年大气污染治理措施" },
+              { date: "2013-09-01", title: "北京市 2013-2017 年清洁空气行动计划" },
+              { date: "2013-09-01", title: "京津冀及周边地区落实大气污染防治行动计划实施细则" },
+              { date: "2018-09-01", title: "北京市打赢蓝天保卫战三年行动计划" },
+              { date: "2021-12-01", title: "北京市“十四五”时期生态环境保护规划" },
+              { date: "2022-02-01", title: "北京市深入打好污染防治攻坚战 2022 年行动计划" },
+              { date: "2023-02-01", title: "北京市深入打好污染防治攻坚战 2023 年行动计划" },
+              { date: "2024-02-01", title: "推进美丽北京建设 持续深入打好污染防治攻坚战 2024 年行动计划" },
+              { date: "2025-01-01", title: "推进美丽北京建设 持续深入打好污染防治攻坚战 2025 年行动计划" },
+              { date: "2026-01-01", title: "美丽北京建设2026年行动计划" }
+            ].map((policy) => ({ ...policy, value: decimalYear(policy.date) }));
+      
+            const pointer = { x: -9999, y: -9999, px: -9999, py: -9999, vx: 0, vy: 0, active: false };
+            let particles = [];
+            let w = 0;
+            let h = 0;
+            let targetClear = 0;
+            let currentClear = 0;
+            let completed = false;
+            let timelineReady = false;
+            let completionScrollTimer = null;
+            let timelineAutoplayFrame = null;
+            let timelineAutoplayLastTime = null;
+            let timelineAutoplayPaused = false;
+            let timelineAutoplayElapsed = 0;
+            const timelineAutoplayDuration = 5000;
+      
+            function decimalYear(dateText) {
+              const [year, month, day] = dateText.split("-").map(Number);
+              return year + (month - 1) / 12 + (day - 1) / 365;
+            }
+      
+            function progressFromYear(value) {
+              return Math.min(1, Math.max(0, (value - startYear) / (endYear - startYear)));
+            }
+      
+            function nearestPolicyIndex(value) {
+              let nearest = 0;
+              let nearestDistance = Infinity;
+              policies.forEach((policy, index) => {
+                const distance = Math.abs(policy.value - value);
+                if (distance < nearestDistance) {
+                  nearest = index;
+                  nearestDistance = distance;
+                }
+              });
+              return nearest;
+            }
+      
+            function resizeCanvas() {
+              const rect = opening.getBoundingClientRect();
+              w = Math.max(1, Math.round(rect.width));
+              h = Math.max(1, Math.round(rect.height));
+              canvas.width = Math.round(w * dpr);
+              canvas.height = Math.round(h * dpr);
+              canvas.style.width = `${w}px`;
+              canvas.style.height = `${h}px`;
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+              createParticles();
+            }
+      
+            function createParticles() {
+              const area = w * h;
+              const count = Math.min(6000, Math.max(2400, Math.floor(area / 160)));
+              particles = Array.from({ length: count }, () => {
+                const yBias = Math.random();
+                return {
+                  x: Math.random() * w,
+                  y: Math.pow(yBias, 0.82) * h,
+                  vx: (Math.random() - 0.5) * 0.38,
+                  vy: -0.12 - Math.random() * 0.34,
+                  r: 0.7 + Math.random() * 2.4,
+                  a: 0.24 + Math.random() * 0.54,
+                  warm: Math.random() < 0.16,
+                  lightness: 34 + Math.random() * 18,
+                  fadeOrder: Math.random()
+                };
+              });
+            }
+      
+            function renderMarkers() {
+              let lastLabelProgress = -Infinity;
+              policyMarkers.replaceChildren(...policies.map((policy, index) => {
+                const markerProgress = progressFromYear(policy.value);
+                const marker = document.createElement("button");
+                marker.type = "button";
+                marker.className = "policy-marker";
+                marker.tabIndex = -1;
+                marker.dataset.index = index;
+                marker.style.left = `${markerProgress * 100}%`;
+                marker.title = `${policy.date} ${policy.title}`;
+                if (markerProgress - lastLabelProgress >= 0.04) {
+                  const label = document.createElement("span");
+                  label.className = "marker-date";
+                  label.textContent = policy.date.slice(0, 4);
+                  marker.append(label);
+                  lastLabelProgress = markerProgress;
+                }
+                return marker;
+              }));
+            }
+      
+            function renderPolicyTitle(title) {
+              policyTitle.classList.toggle("is-long", title.length > 24 && title.length <= 34);
+              policyTitle.classList.toggle("is-extra-long", title.length > 34);
+              policyTitle.textContent = title;
+            }
+      
+            function renderPolicyState(index, progress) {
+              const policy = policies[index];
+              targetClear = progress;
+              timelineProgress.style.width = `${progress * 100}%`;
+              timelineThumb.style.left = `${progress * 100}%`;
+              document.querySelectorAll(".policy-marker").forEach((marker, markerIndex) => {
+                marker.classList.toggle("is-active", markerIndex <= index);
+              });
+              policyYear.textContent = policy.date.slice(0, 4);
+              renderPolicyTitle(policy.title);
+              policySubtitle.textContent = `北京市累计颁布 ${index + 1} 项+政策`;
+            }
+      
+            function updateTimeline() {
+              if (!timelineReady) return;
+              if (completed) {
+                if (completionScrollTimer) {
+                  clearTimeout(completionScrollTimer);
+                  completionScrollTimer = null;
+                }
+                const index = nearestPolicyIndex(Number(policySlider.value));
+                const policy = policies[index];
+                policySlider.value = policy.value;
+                renderPolicyState(index, progressFromYear(policy.value));
+                opening.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }
+      
+            function startTimelineAutoplay() {
+              if (!timelineReady || completed) return;
+              if (timelineAutoplayFrame) cancelAnimationFrame(timelineAutoplayFrame);
+              opening.classList.add("is-autoplay-started");
+              policySlider.disabled = true;
+              timelineAutoplayElapsed = 0;
+              timelineAutoplayLastTime = null;
+              timelineAutoplayPaused = false;
+              timelineAutoplayFrame = requestAnimationFrame(stepTimelineAutoplay);
+            }
+      
+            function stepTimelineAutoplay(timestamp) {
+              if (!timelineReady || completed) {
+                timelineAutoplayFrame = null;
+                return;
+              }
+              if (timelineAutoplayPaused) {
+                timelineAutoplayLastTime = timestamp;
+                timelineAutoplayFrame = requestAnimationFrame(stepTimelineAutoplay);
+                return;
+              }
+              if (timelineAutoplayLastTime === null) {
+                timelineAutoplayLastTime = timestamp;
+              }
+              const elapsed = timestamp - timelineAutoplayLastTime;
+              timelineAutoplayLastTime = timestamp;
+              timelineAutoplayElapsed = Math.min(timelineAutoplayDuration, timelineAutoplayElapsed + elapsed);
+              const progress = timelineAutoplayElapsed / timelineAutoplayDuration;
+              const index = Math.min(policies.length - 1, Math.floor(progress * policies.length));
+              policySlider.value = (startYear + progress * (endYear - startYear)).toFixed(2);
+              renderPolicyState(index, progress);
+              if (timelineAutoplayElapsed >= timelineAutoplayDuration) {
+                finishTimelinePlayback();
+                return;
+              }
+              timelineAutoplayFrame = requestAnimationFrame(stepTimelineAutoplay);
+            }
+      
+            function finishTimelinePlayback() {
+              timelineAutoplayFrame = null;
+              completed = true;
+              policySlider.disabled = false;
+              policySlider.value = endYear;
+              opening.classList.add("is-complete");
+              document.querySelectorAll(".policy-marker").forEach((marker) => {
+                marker.tabIndex = 0;
+              });
+              targetClear = 1;
+              timelineProgress.style.width = "100%";
+              timelineThumb.style.left = "100%";
+              policyYear.textContent = "2026";
+              renderPolicyTitle("走进北京空气质量与政策治理");
+              policySubtitle.textContent = "";
+              completionScrollTimer = setTimeout(() => {
+                document.querySelector("#analysis-pages").scrollIntoView({ behavior: "smooth", block: "start" });
+                completionScrollTimer = null;
+              }, 1100);
+            }
+      
+            function pauseTimelineAutoplay() {
+              timelineAutoplayPaused = true;
+            }
+      
+            function resumeTimelineAutoplay() {
+              if (completed) return;
+              timelineAutoplayLastTime = null;
+              timelineAutoplayPaused = false;
+            }
+      
+            function typeRichLine(element, segments, options = {}) {
+              return new Promise((resolve) => {
+                introTypewriter.classList.remove("is-hidden");
+                element.replaceChildren();
+                element.classList.add("is-typing");
+                const typingCursor = document.createElement("span");
+                typingCursor.className = "typing-cursor";
+                const letters = [];
+                for (const segment of segments) {
+                  const wrapper = document.createElement("span");
+                  if (segment.emphasis) wrapper.className = "text-emphasis";
+                  for (const char of Array.from(segment.text)) {
+                    const letter = document.createElement("span");
+                    letter.textContent = char;
+                    letter.style.visibility = "hidden";
+                    wrapper.append(letter);
+                    letters.push(letter);
+                  }
+                  element.append(wrapper);
+                }
+                let cursor = -1;
+                const timer = setInterval(() => {
+                  cursor += 1;
+                  if (letters[cursor]) {
+                    letters[cursor].style.visibility = "visible";
+                    letters[cursor].after(typingCursor);
+                  }
+                  if (cursor >= letters.length - 1) {
+                    clearInterval(timer);
+                    element.classList.remove("is-typing");
+                    typingCursor.remove();
+                    setTimeout(resolve, options.holdAfter ?? 950);
+                  }
+                }, 74);
+              });
+            }
+      
+            function hideIntroLine() {
+              return new Promise((resolve) => {
+                introTypewriter.classList.add("is-hidden");
+                setTimeout(resolve, 760);
+              });
+            }
+      
+            async function playOpeningText() {
+              policySlider.disabled = true;
+              await typeRichLine(introLineOne, [
+                { text: "2013年北京平均" },
+                { text: "每周", emphasis: true },
+                { text: "都会有一天重污染" }
+              ]);
+              await typeRichLine(introLineTwo, [
+                { text: "2026年第一季度北京市重污染天数为" },
+                { text: "零", emphasis: true }
+              ], { holdAfter: 1200 });
+              await hideIntroLine();
+              timelineReady = true;
+              policySlider.disabled = true;
+              opening.classList.add("is-timeline-ready");
+            }
+      
+            function setVisualClear(clear) {
+              opening.style.setProperty("--clear", clear.toFixed(3));
+              opening.style.setProperty("--shade-top", (0.9 - clear * 0.5).toFixed(3));
+              opening.style.setProperty("--shade-mid", (0.78 - clear * 0.52).toFixed(3));
+              opening.style.setProperty("--shade-sky", (0.2 + clear * 0.36).toFixed(3));
+              opening.style.setProperty("--bg-opacity", Math.min(0.92, 0.04 + Math.max(0, clear - 0.08) * 1.08).toFixed(3));
+              opening.style.setProperty("--bg-blur", `${((1 - clear) * 10).toFixed(2)}px`);
+              opening.style.setProperty("--bg-saturate", (0.78 + clear * 0.55).toFixed(3));
+              opening.style.setProperty("--bg-scale", (1.035 - clear * 0.035).toFixed(4));
+              opening.style.setProperty("--photo-opacity", Math.min(0.96, Math.max(0, clear - 0.12) * 1.16).toFixed(3));
+              opening.style.setProperty("--photo-blur", `${Math.max(0, (1 - clear) * 8).toFixed(2)}px`);
+              opening.style.setProperty("--map-opacity", "0");
+              opening.style.setProperty("--sky-opacity", Math.max(0, 0.28 - clear * 0.22).toFixed(3));
+              opening.style.setProperty("--skyline-opacity", "0");
+            }
+      
+            function addHole(event) {
+              const rect = canvas.getBoundingClientRect();
+              const x = event.clientX - rect.left;
+              const y = event.clientY - rect.top;
+              pointer.vx = x - pointer.px;
+              pointer.vy = y - pointer.py;
+              pointer.px = x;
+              pointer.py = y;
+              pointer.x = x;
+              pointer.y = y;
+              pointer.active = true;
+            }
+      
+            function updateParticles(clear) {
+              for (const p of particles) {
+                const wind = 0.28 + clear * 1.2;
+                p.x += p.vx + wind;
+                p.y += p.vy + Math.sin((p.x + p.y) * 0.01) * 0.18;
+                const dx = p.x - pointer.x;
+                const dy = p.y - pointer.y;
+                const dist = Math.hypot(dx, dy);
+                if (pointer.active && dist < 92) {
+                  const force = (1 - dist / 92) * 1.75;
+                  p.x += (dx / (dist || 1)) * force + pointer.vx * 0.022;
+                  p.y += (dy / (dist || 1)) * force + pointer.vy * 0.022;
+                }
+                if (p.x > w + 30) p.x = -30;
+                if (p.y < -30) p.y = h + 30;
+                if (p.y > h + 30) p.y = -30;
+              }
+            }
+      
+            function drawDust(clear) {
+              ctx.clearRect(0, 0, w, h);
+              const hazeAlpha = 0.86 * Math.pow(1 - clear, 2);
+              const gradient = ctx.createLinearGradient(0, 0, w, h);
+              gradient.addColorStop(0, `rgba(54, 42, 30, ${hazeAlpha})`);
+              gradient.addColorStop(0.46, `rgba(138, 106, 61, ${hazeAlpha * 0.86})`);
+              gradient.addColorStop(1, `rgba(194, 160, 96, ${hazeAlpha * 0.62})`);
+              ctx.fillStyle = gradient;
+              ctx.fillRect(0, 0, w, h);
+              ctx.save();
+              ctx.globalCompositeOperation = "source-over";
+              const visibleDensity = Math.max(0.08, Math.pow(1 - clear, 1.25));
+              for (const p of particles) {
+                if (p.fadeOrder > visibleDensity) continue;
+                ctx.beginPath();
+                const hue = p.warm ? 42 : 210;
+                const saturation = p.warm ? 34 : 6;
+                const lightness = p.warm ? p.lightness + 18 : p.lightness;
+                ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.a * Math.max(0.025, Math.pow(1 - clear, 0.75))})`;
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              ctx.restore();
+            }
+      
+            function animate() {
+              currentClear += (targetClear - currentClear) * 0.08;
+              setVisualClear(currentClear);
+              updateParticles(currentClear);
+              drawDust(currentClear);
+              requestAnimationFrame(animate);
+            }
+      
+            canvas.addEventListener("pointermove", addHole);
+            canvas.addEventListener("pointerleave", () => {
+              pointer.active = false;
+              pointer.x = -9999;
+              pointer.y = -9999;
+            });
+            policySlider.addEventListener("input", updateTimeline);
+            policySlider.addEventListener("pointerdown", pauseTimelineAutoplay);
+            window.addEventListener("pointerup", resumeTimelineAutoplay);
+            openingStart.addEventListener("click", startTimelineAutoplay);
+            policyMarkers.addEventListener("click", (event) => {
+              const marker = event.target.closest(".policy-marker");
+              if (!marker || !completed) return;
+              if (completionScrollTimer) {
+                clearTimeout(completionScrollTimer);
+                completionScrollTimer = null;
+              }
+              const policy = policies[Number(marker.dataset.index)];
+              policySlider.value = policy.value;
+              updateTimeline();
+              opening.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+            window.addEventListener("resize", resizeCanvas);
+            renderMarkers();
+            resizeCanvas();
+            setVisualClear(0);
+            playOpeningText();
+            requestAnimationFrame(animate);
+    </script>
+
+    <script>
+      (() => {
+            const tabs = Array.from(document.querySelectorAll(".nav-tab"));
+            const tabLabels = {
+              cn: {
+                overview: "北京市空气质量概览",
+                measures: "政策措施分析",
+                policy: "政策效果评估",
+                comparison: "国内与全球结果对照"
+              },
+              en: {
+                overview: "Beijing Air Quality Overview",
+                measures: "Policy Measure Analysis",
+                policy: "Beijing Policy Effectiveness",
+                comparison: "Domestic and Global Comparison"
+              }
+            };
+            const brandLabels = {
+              cn: "北京市空气质量与政策可视化",
+              en: "Beijing Air Quality and Policy Visualization"
+            };
+            const frames = {
+              overview: document.getElementById("page-overview"),
+              measures: document.getElementById("page-measures"),
+              policy: document.getElementById("page-policy"),
+              comparison: document.getElementById("page-comparison")
+            };
+      
+            function activatePage(page, updateHistory = true) {
+              const activePage = frames[page] ? page : "overview";
+      
+              tabs.forEach((tab) => {
+                const isActive = tab.dataset.page === activePage;
+                tab.setAttribute("aria-selected", String(isActive));
+                tab.tabIndex = isActive ? 0 : -1;
+              });
+      
+              Object.entries(frames).forEach(([name, frame]) => {
+                frame.hidden = name !== activePage;
+              });
+      
+              const activeFrame = frames[activePage];
+              if (!activeFrame.getAttribute("src") && activeFrame.dataset.src) {
+                activeFrame.src = activeFrame.dataset.src;
+              }
+      
+              if (updateHistory) {
+                history.replaceState(null, "", `#${activePage}`);
+              }
+            }
+      
+            function updateShellLanguage(language) {
+              const lang = language === "en" ? "en" : "cn";
+              document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+              document.title = lang === "en"
+                ? "Beijing Air Quality Analysis"
+                : "北京市空气质量分析";
+              document.getElementById("siteBrand").textContent = brandLabels[lang];
+              tabs.forEach((tab) => {
+                tab.textContent = tabLabels[lang][tab.dataset.page];
+              });
+            }
+      
+            tabs.forEach((tab, index) => {
+              tab.addEventListener("click", () => activatePage(tab.dataset.page));
+              tab.addEventListener("keydown", (event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+                  return;
+                }
+                const offset = event.key === "ArrowRight" ? 1 : -1;
+                const nextTab = tabs[(index + offset + tabs.length) % tabs.length];
+                nextTab.focus();
+                activatePage(nextTab.dataset.page);
+              });
+            });
+      
+            window.addEventListener("hashchange", () => {
+              activatePage(location.hash.slice(1), false);
+            });
+      
+            window.addEventListener("message", (event) => {
+              if (event.data?.type === "page-language-change") {
+                updateShellLanguage(event.data.language);
+              }
+            });
+      
+            updateShellLanguage("cn");
+            activatePage(location.hash.slice(1), false);
+          })();
+    </script>
+  </body>
 </html>

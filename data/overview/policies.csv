@@ -1,0 +1,17 @@
+id,name_cn,label_en,start,end,group
+1,《北京市第十六阶段控制大气污染措施》,16th-Stage Pollution Control Measures,2010-04,2010-12,baseline
+2,《北京市清洁空气行动计划 (2011-2015 年大气污染控制措施）》,Clean Air Action Plan,2011-07,2015-12,regime
+3,《加快压减燃煤促进空气质量改善工作方案》,Clean Air Enhancement Campaign,2012-09,2015-12,secondary
+4,《北京市2012—2020年大气污染治理措施》,Air Pollution Control Program,2012-09,2020-12,secondary
+5,《北京市工业大气污染治理行动计划 (2012-2020 年）》,Clean Air Governance Action Plan,2012-08,2020-12,secondary
+6,《北京市 2013-2017 年清洁空气行动计划》,Clean Air Action Plan,2013-09,2017-12,regime
+7,《京津冀及周边地区落实大气污染防治行动计划实施细则》,Regional Air Pollution Coordination Plan,2013-09,2017-12,secondary
+8,《北京市大气污染防治条例》,Beijing Air Pollution Regulation,2014-01,present,legal
+9,《北京市打赢蓝天保卫战三年行动计划》,Blue Sky Defence War,2018-09,2020-12,regime
+10,《北京市 “十四五” 时期生态环境保护规划》,14th Five-Year Eco Plan,2021-12,2026-12,regime
+11,《北京市深入打好污染防治攻坚战 2022 年行动计划》,2022 Air Quality Action Plan,2022-02,2022-12,baseline
+12,《北京市深入打好污染防治攻坚战 2023 年行动计划》,2023 Air Quality Action Plan,2023-02,2023-12,baseline
+13,《推进美丽北京建设 持续深入打好污染防治攻坚战 2024 年行动计划》,2024 Air Quality Action Plan,2024-02,2024-12,baseline
+14,《推进美丽北京建设 持续深入打好污染防治攻坚战 2025 年行动计划》,2025 Air Quality Action Plan,2025-01,2025-12,baseline
+15,《美丽北京建设2026年行动计划》,2026 Air Quality Action Plan,2026-01,2026-12,baseline
+16,《2026 年北京市扬尘专项治理春季攻坚行动方案》,2026 Dust Control Action Plan,2026-03,2026-05,future

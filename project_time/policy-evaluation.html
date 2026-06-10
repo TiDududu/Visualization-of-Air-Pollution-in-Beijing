@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>政策效果评估</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-i18n-page="policy">
+  <main class="page-shell">
+    <header class="hero hero-simple">
+      <div>
+        <h1>政策效果评估</h1>
+      </div>
+    </header>
+
+    <section class="panel heatmap-panel">
+      <div class="section-heading">
+        <div>
+          <h2>政策作用结果</h2>
+        </div>
+        <div class="legend-wrap" aria-label="颜色图例">
+          <span>下降</span>
+          <div id="color-legend"></div>
+          <span>上升</span>
+        </div>
+      </div>
+      <div id="heatmap-scroll" class="chart-scroll">
+        <div id="heatmap" class="chart-host" aria-label="政策影响热力图"></div>
+      </div>
+      <p class="scroll-hint">政策名称较多，可横向滚动查看全部政策。</p>
+    </section>
+
+    <section class="panel detail-panel">
+      <div class="section-heading detail-heading">
+        <div>
+          <h2>政策生效情况</h2>
+          <h3 id="detail-title">政策执行期月度变化</h3>
+          <p id="detail-subtitle"></p>
+        </div>
+        <div id="selection-stats" class="selection-stats"></div>
+      </div>
+      <div id="line-chart" class="chart-host line-host" aria-label="政策月度变化折线图"></div>
+      <div class="chart-key">
+        <span><i class="key-line main"></i>月度变化</span>
+        <span><i class="key-line threshold"></i>月度下降 5% 阈值</span>
+        <span><i class="key-dot effective"></i>连续两月达标后生效</span>
+        <span><i class="key-dot maximum"></i>最大降幅</span>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="left">清华大学 · 数据可视化课程</div>
+      <div class="right">DATA · AQICN / 北京市环境保护监测中心 / CPCB / MEE / AQLI</div>
+    </footer>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+  <div id="error-message" class="error-message" hidden></div>
+
+  <script src="../project_policy/d3.v7.min.js"></script>
+  <script src="page-language.js?v=20260610-policy-copy-cleanup"></script>
+  <script src="app.js?v=20260610-policy-copy-cleanup"></script>
+</body>
+</html>
