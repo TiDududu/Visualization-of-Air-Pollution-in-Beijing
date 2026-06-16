@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>北京污染颗粒 3D 场景</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="pollution-3d.css">
+  </head>
+  <body>
+    <main class="scene-page">
+      <section class="scene-layout" aria-label="天坛祈年殿与污染颗粒三维可视化">
+        <div class="scene-stage">
+          <canvas id="pollution-scene" aria-label="天坛周围分布 PM2.5、PM10、NO2、O3、SO2 污染颗粒的 3D 场景"></canvas>
+          <div id="webgl-warning" class="webgl-warning">3D 资源加载中。如果长时间停留在这里，请刷新页面或检查浏览器 WebGL 支持。</div>
+        </div>
+
+        <aside class="control-panel">
+          <div class="control-group">
+            <div class="year-hero-summary" aria-label="北京 PM2.5 治理成效摘要">
+              <div class="overview-hero-caption">年均PM2.5浓度下降</div>
+              <div class="overview-hero-pct">67%</div>
+              <div class="overview-hero-change">
+                <span>89.5<span class="overview-hero-value-unit">µg/m³</span></span><span class="overview-hero-arrow">→</span><span>29.4<span class="overview-hero-value-unit">µg/m³</span></span>
+              </div>
+              <p class="overview-hero-impact">
+                按 <abbr title="AQLI（Air Quality Life Index, Univ. of Chicago）：每 1 µg/m³ PM₂.₅ 长期暴露对应约 0.098 年寿命差">AQLI</abbr>
+                剂量-反应模型推算，相比维持 2013 年浓度水平，<b>北京居民人均预期寿命延长约 5.9 年</b>。
+                同期年均空气质量优良天数从 <b>176 天升至 290 天（+114 天）</b>。
+              </p>
+            </div>
+            <label class="control-label" for="year-slider">年份</label>
+            <div class="range-row">
+              <input id="year-slider" type="range" min="0" max="12" value="0" step="1">
+              <strong id="year-value">2014</strong>
+            </div>
+            <button id="year-play-button" class="year-play-button" type="button">播放</button>
+            <button id="rotation-toggle-button" class="year-play-button secondary" type="button">暂停旋转</button>
+          </div>
+
+          <div class="annual-concentration-card" id="annual-concentrations" aria-live="polite">
+            <span class="control-label">当前年度污染物浓度</span>
+          </div>
+
+          <div class="particle-detail-card" id="particle-detail" aria-live="polite">
+            <span class="control-label">选中颗粒</span>
+            <div class="particle-detail-empty">点击场景中的任意小球查看污染物种类和名称。</div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="pollution-3d.bundle.js"></script>
+  </body>
+</html>

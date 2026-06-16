@@ -34,9 +34,6 @@ const policyColors = {
 const translations = {
     en: {
         pageTitle: "Beijing Air Quality Overview, 2014-2026",
-        title: "Beijing Air Quality Overview, 2014-2026",
-        pollutants: "Pollutants:",
-        year: "Year:",
         language: "Language:",
         englishButton: "English",
         chineseButton: "中文",
@@ -71,14 +68,10 @@ const translations = {
         viewMode: "View mode",
         fullView: "Global",
         localView: "Local",
-        unavailable: "Not available",
-        heroImpact: 'Based on the <abbr title="AQLI (Air Quality Life Index, University of Chicago): each 1 µg/m³ of long-term PM2.5 exposure corresponds to roughly 0.098 years of life-expectancy difference">AQLI</abbr> dose-response model, compared with maintaining the 2013 concentration level, <b>Beijing residents gain about 5.9 years of life expectancy on average</b>.<br>Annual good-air days increased from <b>176 to 290 days (+114 days)</b>.'
+        unavailable: "Not available"
     },
     cn: {
         pageTitle: "2014-2026年北京市空气质量概览",
-        title: "2014-2026年北京市空气质量概览",
-        pollutants: "污染物：",
-        year: "年份：",
         language: "语言：",
         englishButton: "English",
         chineseButton: "中文",
@@ -113,8 +106,7 @@ const translations = {
         viewMode: "视图模式切换",
         fullView: "全局",
         localView: "局部",
-        unavailable: "暂无",
-        heroImpact: '按 <abbr title="AQLI（Air Quality Life Index, Univ. of Chicago）：每 1 µg/m³ PM₂.₅ 长期暴露对应约 0.098 年寿命差">AQLI</abbr> 剂量-反应模型推算，相比维持 2013 年浓度水平，<b>北京居民人均预期寿命延长约 5.9 年</b>。<br>同期年均空气质量优良天数从 <b>176 天升至 290 天（+114 天）</b>。'
+        unavailable: "暂无"
     }
 };
 
@@ -127,6 +119,7 @@ let currentMode = "All";
 let airQualityData = [];
 let smoothedData = [];
 let renderChartFn = null;
+let selectedPollutants = ["pm25", "pm10", "no2", "so2"];
 
 const policyCoverFiles = {
     1: "《北京市第十六阶段控制大气污染措施》_00.png",
@@ -340,9 +333,6 @@ function getPolicyTimelineLabel(policy, labelWidth = 112) {
 function updateStaticTexts() {
     document.documentElement.lang = currentLanguage === "cn" ? "zh-CN" : "en";
     document.title = t("pageTitle");
-    d3.select("#chartTitle").text(t("title"));
-    d3.select("#pollutantsControlTitle").text(t("pollutants"));
-    d3.select("#yearControlTitle").text(t("year"));
     d3.select("#footerCourse").text(t("footerCourse"));
     d3.select("#policyInfoTitle").text(t("policyInfo"));
     d3.select("#policyTimeline").attr("aria-label", t("timelineAria"));
@@ -351,13 +341,6 @@ function updateStaticTexts() {
     d3.select(".view-mode-toggle").attr("aria-label", t("viewMode"));
     d3.select("#fullViewButton").text(t("fullView"));
     d3.select("#localViewButton").text(t("localView"));
-    d3.select("#overviewHeroImpact").html(t("heroImpact"));
-
-    const sliderValue = +d3.select("#yearSlider").property("value");
-    const selectedYear = yearOptions[sliderValue];
-
-    d3.select("#yearLabel")
-        .text(selectedYear === "All" ? t("allPeriod") : selectedYear);
 
     if (selectedPolicy) {
         renderPolicyDetail(selectedPolicy);
@@ -386,9 +369,28 @@ function renderCurrentChart() {
     if (!smoothedData.length || !renderChartFn) return;
     if (currentMode === "All") {
         renderChartFn(smoothedData);
+        updateSharedPollutantValues();
         return;
     }
     renderChartFn(airQualityData.filter(d => d.date.getFullYear() === currentMode));
+    updateSharedPollutantValues();
+}
+
+function setOverviewYear(year) {
+    currentMode = year === "All" ? "All" : Number(year);
+    renderCurrentChart();
+}
+
+function updateSharedPollutantValues() {
+    const displayYear = currentMode === "All" ? 2014 : currentMode;
+    document.querySelectorAll("[data-shared-pollutant]").forEach((node) => {
+        const pollutant = node.dataset.sharedPollutant;
+        const rows = airQualityData.filter((row) =>
+            row.date.getFullYear() === displayYear && Number.isFinite(row[pollutant])
+        );
+        const average = rows.length ? d3.mean(rows, (row) => row[pollutant]) : null;
+        node.textContent = Number.isFinite(average) ? ` · ${average.toFixed(1)} ug/m3` : "";
+    });
 }
 
 function syncPolicyPanelHeight() {
@@ -414,8 +416,6 @@ function setOverviewMode(mode, options = {}) {
     if (nextMode === "full") {
         selectedPolicy = null;
         currentMode = "All";
-        d3.select("#yearSlider").property("value", 0);
-        d3.select("#yearLabel").text(t("allPeriod"));
         d3.select("#policyDetail")
             .html(`<p class="policy-placeholder">${escapeHtml(t("policyPrompt"))}</p>`);
         updatePolicySelection();
@@ -560,12 +560,17 @@ Promise.all([
     renderChartFn = renderChart;
     updateStaticTexts();
     renderChart(smoothedData);
+    updateSharedPollutantValues();
     
 
 // draw ALL function for slider switching
 function renderChart(chartData) {
 
     chart.selectAll("*").remove();
+    if (!chartData.length) {
+        chartData = smoothedData.length ? smoothedData : airQualityData;
+    }
+    if (!chartData.length) return;
 
     const chartViewport = document.querySelector("#chartScroll");
     const rawViewportWidth = chartViewport?.clientWidth || 1100;
@@ -608,23 +613,17 @@ function renderChart(chartData) {
         .domain(d3.extent(chartData, d => d.date))
         .range([0, innerWidth]);
 
-    const selectedPollutants = getSelectedPollutants();
+    const selectedPollutants = getSelectedPollutants(chartData);
 
     let yMax;
+    const domainSource = currentMode === "All" ? chartData : data;
 
-    if (currentMode === "All") {
+    yMax = d3.max(domainSource, d =>
+        d3.max(selectedPollutants, p => Number.isFinite(d[p]) ? d[p] : undefined)
+    );
 
-        // scale only on smoothed data
-        yMax = d3.max(chartData, d =>
-            d3.max(selectedPollutants, p => d[p])
-        );
-
-    } else {
-
-        // fixed scale across the entire dataset
-        yMax = d3.max(data, d =>
-            d3.max(selectedPollutants, p => d[p])
-        );
+    if (!Number.isFinite(yMax) || yMax <= 0) {
+        yMax = 100;
     }
 
     const yScale = d3.scaleLinear()
@@ -1444,7 +1443,7 @@ function renderPolicyTimeline(dateExtent, xScale, canvasWidth) {
 // function for drawing lines
 function drawLines(chartData, xScale, yScale, strokeWidth, opacity, animateDraw = false) {
 
-    const selectedPollutants = getSelectedPollutants();
+    const selectedPollutants = getSelectedPollutants(chartData);
 
     const line = d3.line()
         .x(d => xScale(d.date))
@@ -1496,51 +1495,73 @@ function drawLines(chartData, xScale, yScale, strokeWidth, opacity, animateDraw 
 
 function applyCheckboxVisibility() {
 
-    const selectedPollutants = d3.selectAll(".pollutant-checkbox:checked")
-        .nodes()
-        .map(node => node.value);
-
+    const visiblePollutants = getSelectedPollutants();
     pollutants.forEach(pollutant => {
 
-        const isVisible = selectedPollutants.includes(pollutant);
+        const isVisible = visiblePollutants.includes(pollutant);
 
         chart.selectAll(`.line-${pollutant}`)
             .style("display", isVisible ? null : "none");
     });
+    updateChartLegendVisibility();
 }
 
-function getSelectedPollutants() {
-
-    return d3.selectAll(".pollutant-checkbox:checked")
-        .nodes()
-        .map(node => node.value);
+function updateChartLegendVisibility() {
+    const visiblePollutants = getSelectedPollutants();
+    d3.selectAll(".chart-legend-item")
+        .style("display", function() {
+            return visiblePollutants.includes(this.dataset.pollutant) ? null : "none";
+        });
 }
 
-d3.selectAll(".pollutant-checkbox").on("change", function() {
+function getSharedPollutantInputs() {
+    return Array.from(document.querySelectorAll(".shared-pollutant-checkbox"));
+}
+
+function readSharedPollutantSelection() {
+    const picked = getSharedPollutantInputs()
+        .filter((input) => input.checked)
+        .map((input) => input.value)
+        .filter((pollutant) => pollutants.includes(pollutant));
+    return picked.length ? picked : ["pm25"];
+}
+
+function postSharedPollutantsTo3d() {
+    const frame = document.querySelector(".pollution-3d-frame");
+    if (!frame?.contentWindow) return;
+    frame.contentWindow.postMessage({
+        type: "shared-pollutant-selection-change",
+        pollutants: readSharedPollutantSelection()
+    }, "*");
+}
+
+function applySharedPollutantSelection() {
+    selectedPollutants = readSharedPollutantSelection();
     renderCurrentChart();
-});
+    updateChartLegendVisibility();
+    postSharedPollutantsTo3d();
+}
 
+function getSelectedPollutants(chartData = airQualityData) {
 
-// ===============================
-// 9. Year slider interaction
-// ===============================
+    const source = selectedPollutants.length ? selectedPollutants : ["pm25"];
+    const available = source.filter((pollutant) =>
+        chartData.some((row) => Number.isFinite(row[pollutant]))
+    );
+    return available.length ? available : ["pm25"];
+}
 
-d3.select("#yearSlider").on("input", function() {
-
-    const sliderValue = +this.value;
-    const selectedYear = yearOptions[sliderValue];
-
-    d3.select("#yearLabel")
-        .text(selectedYear === "All" ? t("allPeriod") : selectedYear);
-
-    if (selectedYear === "All") {
-        currentMode = "All";
-    } else {
-        currentMode = selectedYear;
+window.addEventListener("message", (event) => {
+    if (event.data?.type === "pollution-3d-year-change") {
+        setOverviewYear(event.data.year);
     }
-
-    renderCurrentChart();
 });
+
+getSharedPollutantInputs().forEach((input) => {
+    input.addEventListener("change", applySharedPollutantSelection);
+});
+
+document.querySelector(".pollution-3d-frame")?.addEventListener("load", postSharedPollutantsTo3d);
 
 
 d3.select("#fullViewButton").on("click", function() {
@@ -1560,24 +1581,6 @@ window.addEventListener("resize", function() {
     }, 180);
 });
 
-      
-    // testing data extraction & smoothing dates via console
-    /*
-    console.log("Clean data:", data);
-    console.log("Number of rows:", data.length);
-    console.log("First row:", data[0]);
-    console.log("Last row:", data[data.length - 1]);
-    console.log("Date extent:", d3.extent(data, d => d.date));
-    console.log("PM2.5 extent:", d3.extent(data, d => d.pm25));
-    console.log("PM10 extent:", d3.extent(data, d => d.pm10));
-    console.log("O3 extent:", d3.extent(data, d => d.o3));
-    console.log("NO2 extent:", d3.extent(data, d => d.no2));
-    console.log("SO2 extent:", d3.extent(data, d => d.so2));
-    console.log("CO extent:", d3.extent(data, d => d.co));
-    console.log("Moving average data:", smoothedData.slice(0, 5));
-    */
-
-// handling data loading error    
 }).catch(function(error) {
     console.error("Error loading CSV files:", error);
 });

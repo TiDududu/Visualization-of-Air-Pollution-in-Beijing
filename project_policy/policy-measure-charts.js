@@ -134,8 +134,10 @@
 
     refs.slider.addEventListener("input", () => {
       stopMeasurePlayback(state, refs);
+      state.sankeyPinnedNodeId = null;
       state.frameIndex = Number(refs.slider.value);
       renderMeasureWordcloud(state, refs);
+      clearSankeyFocus(state, refs, true);
     });
 
     refs.playButton.addEventListener("click", () => {
@@ -716,6 +718,9 @@
         if (!shouldClear) {
           state.sankeyPinnedNodeId = d.id;
           setSankeyNodeFocus(refs, d.id, true);
+          if (d.layer === "policy") {
+            pinWordcloudToPolicy(state, refs, d.filterKey);
+          }
         }
       })
       .on("mouseleave", () => {
@@ -1086,6 +1091,15 @@
       state.timer = null;
     }
     refs.playButton.textContent = "播放";
+  }
+
+  function pinWordcloudToPolicy(state, refs, policyId) {
+    const frameIndex = state.data.frames.findIndex((frame) => String(frame.policyId) === String(policyId));
+    if (frameIndex === -1 || frameIndex === state.frameIndex) return;
+    stopMeasurePlayback(state, refs);
+    state.frameIndex = frameIndex;
+    refs.slider.value = frameIndex;
+    renderMeasureWordcloud(state, refs);
   }
 
   function showTooltip(event, title, body) {

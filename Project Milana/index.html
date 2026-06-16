@@ -50,126 +50,76 @@
         letter-spacing: -0.025em;
     }
 
-    .overview-hero-stats {
-        width: min(880px, 100%);
-        margin: 0 auto 26px;
-        padding: 10px 0 22px;
-        text-align: center;
+    .pollution-3d-embed {
+        width: 100%;
+        margin: 0 auto 20px;
+        background: var(--bg);
     }
 
-    .overview-hero-pct {
-        color: #c94435;
-        font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
-        font-size: clamp(90px, 13vw, 190px);
-        font-weight: 800;
-        line-height: 0.9;
-        letter-spacing: -0.045em;
+    .pollution-3d-frame {
+        display: block;
+        width: 100%;
+        height: 780px;
+        border: 0;
+        background: var(--bg);
     }
 
-    .overview-hero-change {
-        margin-top: 6px;
-        color: #18181b;
-        font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
-        font-size: clamp(28px, 4vw, 44px);
-        font-weight: 500;
-        letter-spacing: 0.02em;
-    }
-
-    .overview-hero-arrow {
-        margin: 0 22px;
-        color: var(--muted);
-        font-weight: 400;
-    }
-
-    .overview-hero-caption {
-        margin-bottom: 8px;
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-    }
-
-    .overview-hero-value-unit {
-        margin-left: 5px;
-        color: var(--muted);
-        font-size: 0.34em;
-        font-weight: 700;
-        letter-spacing: 0;
-        vertical-align: 0.28em;
-    }
-
-    .overview-hero-impact {
-        max-width: 940px;
-        margin: 30px auto 0;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.9;
-        text-align: center;
-    }
-
-    .overview-hero-impact b {
-        color: #18181b;
-        font-weight: 800;
-    }
-
-    .overview-hero-impact abbr[title] {
-        cursor: help;
-        text-decoration: underline dotted;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 3px;
-    }
-
-    .controls {
+    .shared-pollutant-bar {
         display: flex;
         align-items: center;
-        gap: 28px;
-        margin-bottom: 18px;
-        padding: 14px 18px;
-        background: var(--panel);
-        border: 1px solid var(--rule);
-        border-radius: 10px;
-        box-shadow: 0 4px 18px rgba(23, 32, 51, 0.04);
+        gap: 18px;
+        width: 100%;
+        margin: 0 auto 18px;
+        padding: 12px 18px;
+        overflow-x: auto;
+        background: var(--bg);
+        border: 0;
+        box-shadow: none;
+        white-space: nowrap;
     }
 
-    .control-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .control-title {
+    .shared-pollutant-title {
         flex: 0 0 auto;
         color: #30394b;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .shared-pollutant-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        color: #172033;
         font-size: 14px;
-        font-weight: 700;
-    }
-
-    .checkboxes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 9px 12px;
-    }
-
-    .checkboxes label {
-        color: #3d4658;
         cursor: pointer;
-        font-size: 13px;
         user-select: none;
     }
 
-    .year-control {
-        margin-left: auto;
+    .shared-pollutant-checkbox {
+        width: 15px;
+        height: 15px;
+        accent-color: #e2573d;
+        cursor: pointer;
     }
 
-    #yearSlider {
-        width: min(280px, 24vw);
+    .shared-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 1px rgba(23, 32, 51, 0.08);
     }
 
-    #yearLabel {
-        min-width: 76px;
-        color: var(--accent);
-        font-size: 14px;
-        font-weight: 700;
+    .shared-swatch.pm25 { background: #ff604a; }
+    .shared-swatch.pm10 { background: #d9a548; }
+    .shared-swatch.no2 { background: #7aa4ff; }
+    .shared-swatch.so2 { background: #b184ff; }
+    .shared-swatch.o3 { background: #61d7bb; }
+
+    .shared-pollutant-code {
+        color: #66766d;
+        font-weight: 800;
     }
 
     .dashboard {
@@ -596,19 +546,6 @@
             padding: 20px 0 32px;
         }
 
-        .controls {
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        .year-control {
-            margin-left: 0;
-        }
-
-        #yearSlider {
-            width: 230px;
-        }
-
         .dashboard {
             grid-template-columns: 1fr;
         }
@@ -631,39 +568,46 @@
 
 <body>
 <div class="page">
-    <section class="overview-hero-stats" aria-label="北京 PM2.5 治理成效摘要">
-        <div class="overview-hero-caption">2013-&gt;2025 PM2.5年均下降</div>
-        <div class="overview-hero-pct">−67%</div>
-        <div class="overview-hero-change">
-            <span>89.5<span class="overview-hero-value-unit">µg/m³</span></span><span class="overview-hero-arrow">→</span><span>29.4<span class="overview-hero-value-unit">µg/m³</span></span>
-        </div>
-        <p class="overview-hero-impact" id="overviewHeroImpact">
-            按 <abbr title="AQLI（Air Quality Life Index, Univ. of Chicago）：每 1 µg/m³ PM₂.₅ 长期暴露对应约 0.098 年寿命差">AQLI</abbr>
-            剂量-反应模型推算，相比维持 2013 年浓度水平，<b>北京居民人均预期寿命延长约 5.9 年</b>；
-            同期年均空气质量优良天数从 <b>176 天升至 290 天（+114 天）</b>。
-        </p>
+    <section class="pollution-3d-embed" aria-label="天坛与污染物颗粒三维可视化">
+        <iframe
+            class="pollution-3d-frame"
+            src="pollution-3d.html?v=20260616-cleanup-caption"
+            title="天坛与污染物颗粒三维可视化"
+        ></iframe>
     </section>
 
-    <h1 id="chartTitle">2014-2026年北京市空气质量概览</h1>
-    <div class="controls">
-        <div class="control-group">
-            <div class="control-title" id="pollutantsControlTitle">污染物：</div>
-            <div class="checkboxes">
-                <label><input type="checkbox" class="pollutant-checkbox" value="pm25" checked> PM2.5</label>
-                <label><input type="checkbox" class="pollutant-checkbox" value="pm10"> PM10</label>
-                <label><input type="checkbox" class="pollutant-checkbox" value="o3"> O3</label>
-                <label><input type="checkbox" class="pollutant-checkbox" value="no2" checked> NO2</label>
-                <label><input type="checkbox" class="pollutant-checkbox" value="so2" checked> SO2</label>
-                <label><input type="checkbox" class="pollutant-checkbox" value="co"> CO</label>
-            </div>
-        </div>
-
-        <div class="control-group year-control">
-            <div class="control-title" id="yearControlTitle">年份：</div>
-            <input type="range" id="yearSlider" min="0" max="13" step="1" value="0">
-            <div id="yearLabel">全时段</div>
-        </div>
-
+    <div class="shared-pollutant-bar" aria-label="颗粒物类型">
+        <span class="shared-pollutant-title">颗粒物类型</span>
+        <label class="shared-pollutant-item">
+            <input class="shared-pollutant-checkbox" type="checkbox" value="pm25" checked>
+            <span class="shared-swatch pm25"></span>
+            <span class="shared-pollutant-code">PM2.5</span>
+            <strong>极小 / 漂浮 <span class="shared-pollutant-value" data-shared-pollutant="pm25"></span></strong>
+        </label>
+        <label class="shared-pollutant-item">
+            <input class="shared-pollutant-checkbox" type="checkbox" value="pm10" checked>
+            <span class="shared-swatch pm10"></span>
+            <span class="shared-pollutant-code">PM10</span>
+            <strong>略大 / 低空 <span class="shared-pollutant-value" data-shared-pollutant="pm10"></span></strong>
+        </label>
+        <label class="shared-pollutant-item">
+            <input class="shared-pollutant-checkbox" type="checkbox" value="no2" checked>
+            <span class="shared-swatch no2"></span>
+            <span class="shared-pollutant-code">NO2</span>
+            <strong>近地 <span class="shared-pollutant-value" data-shared-pollutant="no2"></span></strong>
+        </label>
+        <label class="shared-pollutant-item">
+            <input class="shared-pollutant-checkbox" type="checkbox" value="so2" checked>
+            <span class="shared-swatch so2"></span>
+            <span class="shared-pollutant-code">SO2</span>
+            <strong>近地 / 扩散 <span class="shared-pollutant-value" data-shared-pollutant="so2"></span></strong>
+        </label>
+        <label class="shared-pollutant-item">
+            <input class="shared-pollutant-checkbox" type="checkbox" value="o3">
+            <span class="shared-swatch o3"></span>
+            <span class="shared-pollutant-code">O3</span>
+            <strong>高空 / 光晕 <span class="shared-pollutant-value" data-shared-pollutant="o3"></span></strong>
+        </label>
     </div>
 
     <div class="dashboard full-view" id="dashboard">
@@ -676,12 +620,12 @@
                 </div>
             </div>
             <div class="chart-legend" aria-label="污染物图例">
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#1f77b4"></i>PM2.5</span>
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#ff7f0e"></i>PM10</span>
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#2ca02c"></i>O3</span>
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#d62728"></i>NO2</span>
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#9467bd"></i>SO2</span>
-                <span class="chart-legend-item"><i class="chart-legend-swatch" style="background:#8c564b"></i>CO</span>
+                <span class="chart-legend-item" data-pollutant="pm25"><i class="chart-legend-swatch" style="background:#1f77b4"></i>PM2.5</span>
+                <span class="chart-legend-item" data-pollutant="pm10"><i class="chart-legend-swatch" style="background:#ff7f0e"></i>PM10</span>
+                <span class="chart-legend-item" data-pollutant="o3"><i class="chart-legend-swatch" style="background:#2ca02c"></i>O3</span>
+                <span class="chart-legend-item" data-pollutant="no2"><i class="chart-legend-swatch" style="background:#d62728"></i>NO2</span>
+                <span class="chart-legend-item" data-pollutant="so2"><i class="chart-legend-swatch" style="background:#9467bd"></i>SO2</span>
+                <span class="chart-legend-item" data-pollutant="co"><i class="chart-legend-swatch" style="background:#8c564b"></i>CO</span>
             </div>
         </section>
 
@@ -705,6 +649,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=20260616-cleanup-caption"></script>
 </body>
 </html>
