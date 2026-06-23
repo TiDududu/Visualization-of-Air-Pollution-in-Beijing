@@ -53679,7 +53679,7 @@ function broadcastOverviewGlobal() {
 
 async function loadYearlyData() {
   try {
-    const response = await fetch("../data/overview/beijing-air-quality.csv");
+    const response = await fetch("../data/beijing-air-quality.csv");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const csvText = await response.text();
     yearlyData = aggregateCsvYearlyData(csvText);

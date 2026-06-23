@@ -1,0 +1,2 @@
+# Keep vendored libraries byte-for-byte (no EOL conversion)
+vendor/** -text

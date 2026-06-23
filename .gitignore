@@ -1,0 +1,12 @@
+# Local agent / editor tooling
+.claude/
+.vscode/
+.idea/
+
+# OS / system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencies / build
+node_modules/

@@ -170,6 +170,17 @@ h1 {
   font-size: 12px;
 }
 
+.data-note {
+  margin: 16px 0 0;
+  padding: 10px 13px;
+  border-left: 3px solid var(--gold);
+  border-radius: 2px;
+  background: #f6f3ed;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 .axis text {
   fill: #4f5b66;
   font-size: 12px;

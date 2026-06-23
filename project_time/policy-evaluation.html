@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>政策效果评估</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="styles.css?v=20260622-threshold-label-annotation">
 </head>
 <body data-i18n-page="policy">
@@ -29,6 +28,7 @@
       <div id="heatmap-scroll" class="chart-scroll">
         <div id="heatmap" class="chart-host" aria-label="政策影响热力图"></div>
       </div>
+      <p class="data-note">SO₂ 提示：原始逐日 SO₂ 约 22% 缺失，经邻均插补后参与计算（见 data/project_time_pipeline/preprocessing-report.txt），故 SO₂ 列的政策效果评估较其它污染物更不确定，须谨慎解读。</p>
     </section>
 
     <section class="panel detail-panel">
@@ -58,7 +58,7 @@
   <div id="tooltip" class="tooltip" role="tooltip"></div>
   <div id="error-message" class="error-message" hidden></div>
 
-  <script src="../project_policy/d3.v7.min.js"></script>
+  <script src="../vendor/d3.v7.min.js"></script>
   <script src="page-language.js?v=20260622-matched-absolute"></script>
   <script src="app.js?v=20260622-data-policy-evaluation"></script>
 </body>

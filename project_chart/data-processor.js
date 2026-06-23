@@ -110,8 +110,10 @@ async function loadAndProcessData(csvPath) {
     no2: means.no2
   })).sort((a, b) => a.year - b.year);
 
-  // Impute 2013 if missing or incomplete (since 2013 only has 1 record)
-  // Seed data based on historical Beijing 2013 annual mean values in µg/m³
+  // Impute 2013 if missing or incomplete (since 2013 only has 1 record).
+  // NOTE: these are LITERATURE ESTIMATES, not AQICN aggregates. This is surfaced
+  // to readers in the chart's "数据与局限" footnote and documented in
+  // data/comparison/README.md so the 2013 DiD start point is read as an estimate.
   const seed2013 = { year: 2013, pm25: 89.5, pm10: 108.0, so2: 26.5, no2: 56.0 };
   
   const has2013 = processed.find(d => d.year === 2013);

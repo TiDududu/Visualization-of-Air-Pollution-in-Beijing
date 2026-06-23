@@ -483,7 +483,7 @@ function movingAverage(data, windowSize) {
 
 // loading both files of data
 Promise.all([
-    d3.csv("../data/overview/beijing-air-quality.csv"),
+    d3.csv("../data/beijing-air-quality.csv"),
     d3.csv("../data/overview/policies.csv"),
     loadPolicyWorkbook()
 ]).then(function([data, policyData, policyDetails]) {
@@ -1431,7 +1431,7 @@ function renderPolicyTimeline(dateExtent, xScale, canvasWidth) {
     markers.html(item => {
         const policy = item.policy;
         return `
-            <img class="policy-cover" src="${escapeAttribute(policy.cover)}" alt="">
+            <img class="policy-cover" src="${escapeAttribute(policy.cover)}" alt="" loading="lazy" decoding="async">
             <span class="policy-marker-name">${escapeHtml(getPolicyLabel(policy))}</span>
             <span class="policy-marker-date">${formatPolicyPeriod(policy)}</span>
         `;
@@ -1660,7 +1660,7 @@ function renderPolicyDetail(policy) {
 
     d3.select("#policyDetail").html(`
         <article class="policy-detail">
-            <img class="policy-detail-cover" src="${escapeAttribute(policy.cover)}" alt="${escapeAttribute(getPolicyLabel(policy))}">
+            <img class="policy-detail-cover" src="${escapeAttribute(policy.cover)}" alt="${escapeAttribute(getPolicyLabel(policy))}" loading="lazy" decoding="async">
             <h3>${escapeHtml(getPolicyLabel(policy))}</h3>
             <dl class="policy-meta">
                 ${policyDetailRow(t("publishDate"), detail.date || d3.timeFormat("%Y-%m")(policy.start))}

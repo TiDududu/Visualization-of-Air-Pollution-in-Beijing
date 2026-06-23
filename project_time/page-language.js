@@ -94,6 +94,8 @@
     "《推进美丽北京建设 持续深入打好污染防治攻坚战 2024 年行动计划》": "Beautiful Beijing and Pollution Prevention Action Plan 2024",
     "《推进美丽北京建设 持续深入打好污染防治攻坚战 2025 年行动计划》": "Beautiful Beijing and Pollution Prevention Action Plan 2025",
     "《美丽北京建设2026年行动计划》": "Beautiful Beijing Action Plan 2026",
+    "SO₂ 提示：原始逐日 SO₂ 约 22% 缺失，经邻均插补后参与计算（见 data/project_time_pipeline/preprocessing-report.txt），故 SO₂ 列的政策效果评估较其它污染物更不确定，须谨慎解读。":
+      "SO₂ note: about 22% of the raw daily SO₂ values were missing and were filled by neighbor-mean interpolation before analysis (see data/project_time_pipeline/preprocessing-report.txt), so SO₂ policy-effect estimates are more uncertain than the other pollutants and should be read with caution.",
   };
 
   const comparison = {
@@ -220,6 +222,10 @@
     "年份拖动条": "Year scrubber",
     "头条数字": "Headline statistics",
     "点此回放 2013 至 2025 的 12 年": "Replay the 12 years from 2013 to 2025",
+    "2013 年北京数值为文献估算（PM₂.₅ 89.5、PM₁₀ 108、SO₂ 26.5、NO₂ 56 µg/m³）：AQICN 当年仅 1 天有效观测、不具代表性，故以文献年均值替代并用作 DiD 起点，图中 2013 起点应按估算值理解。":
+      "Beijing's 2013 values are literature estimates (PM₂.₅ 89.5, PM₁₀ 108, SO₂ 26.5, NO₂ 56 µg/m³): AQICN had only one valid observation day that year, so published annual means are used as the DiD start point. Read the 2013 starting point as an estimate.",
+    "SO₂ 数据约 22% 原始缺失、年均仅由非缺失日聚合（详见 data/project_time_pipeline/preprocessing-report.txt），其年际轨迹与 DiD 结论须谨慎解读。":
+      "About 22% of the raw daily SO₂ records are missing; annual means aggregate only the non-missing days (see data/project_time_pipeline/preprocessing-report.txt), so the SO₂ trajectory and DiD conclusions should be read with caution.",
   };
 
   const dictionaries = {
