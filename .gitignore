@@ -10,3 +10,6 @@ desktop.ini
 
 # Dependencies / build
 node_modules/
+
+# Personal/local-only review doc (kept locally, not part of the project)
+docs/技术评审报告.md
