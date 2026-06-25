@@ -1,4 +1,4 @@
-import * as THREE from "./vendor/three.module.js";
+import * as THREE from "../vendor/three.module.js";
 
 const canvas = document.querySelector("#pollution-scene");
 const warningNode = document.querySelector("#webgl-warning");

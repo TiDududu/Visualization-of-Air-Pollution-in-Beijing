@@ -1,4 +1,4 @@
-/* Generated from vendor/three.module.js and pollution-3d.js for direct file:// usage. */
+/* Generated from ../vendor/three.module.js and pollution-3d.js for direct file:// usage. */
 (function () {
 /**
  * @license
